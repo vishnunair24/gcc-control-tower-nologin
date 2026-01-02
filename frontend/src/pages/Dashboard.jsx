@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
 import {
@@ -12,11 +12,31 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import * as XLSX from "xlsx";
 
 const COLORS = ["#2563eb", "#f59e0b", "#ef4444", "#6b7280", "#10b981"];
+const today = new Date();
+
+const pct = (v) =>
+  v === null || v === undefined
+    ? "0%"
+    : typeof v === "string" && v.includes("%")
+    ? v
+    : `${v}%`;
+
+// ✅ SIMPLE EXCEL-STYLE DATE FORMAT (DD-MM-YYYY)
+const fmtDate = (d) => {
+  if (!d) return "";
+  const dt = new Date(d);
+  if (isNaN(dt)) return d;
+  return `${String(dt.getDate()).padStart(2, "0")}-${String(
+    dt.getMonth() + 1
+  ).padStart(2, "0")}-${dt.getFullYear()}`;
+};
 
 function Dashboard() {
   const [tasks, setTasks] = useState([]);
+  const [activeSignal, setActiveSignal] = useState(null);
 
   useEffect(() => {
     fetchTasks();
@@ -27,7 +47,7 @@ function Dashboard() {
     setTasks(res.data);
   };
 
-  // ---------- KPIs ----------
+  // ================= KPIs =================
   const totalTasks = tasks.length;
   const delayedTasks = tasks.filter(t => t.status === "Delayed").length;
   const blockedTasks = tasks.filter(t => t.status === "Blocked").length;
@@ -36,30 +56,89 @@ function Dashboard() {
   const completionRate =
     totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
-  // ---------- CHART DATA ----------
+  // ================= CHART DATA =================
   const statusData = [
     { name: "WIP", value: tasks.filter(t => t.status === "WIP").length },
     { name: "Closed", value: completedTasks },
     { name: "Delayed", value: delayedTasks },
     { name: "Blocked", value: blockedTasks },
-    { name: "On Hold", value: tasks.filter(t => t.status === "On Hold").length },
   ].filter(d => d.value > 0);
 
   const workstreamData = Object.values(
-    tasks.reduce((acc, task) => {
-      acc[task.workstream] = acc[task.workstream] || {
-        workstream: task.workstream,
+    tasks.reduce((acc, t) => {
+      const p =
+        typeof t.progress === "string"
+          ? Number(t.progress.replace("%", ""))
+          : t.progress || 0;
+
+      acc[t.workstream] = acc[t.workstream] || {
+        workstream: t.workstream,
+        total: 0,
         count: 0,
       };
-      acc[task.workstream].count += 1;
+      acc[t.workstream].total += p;
+      acc[t.workstream].count += 1;
       return acc;
     }, {})
-  );
+  ).map(w => ({
+    workstream: w.workstream,
+    avgProgress: Math.round(w.total / w.count),
+  }));
 
-  // ---------- RISK ITEMS ----------
-  const riskItems = tasks.filter(
-    t => t.status === "Delayed" || t.status === "Blocked"
-  );
+  // ================= SIGNAL LOGIC =================
+  const signals = useMemo(() => ({
+    overdue: {
+      label: "Overdue Tasks",
+      data: tasks.filter(
+        t => t.endDate && new Date(t.endDate) < today && t.status !== "Closed"
+      ),
+    },
+    risk: {
+      label: "At Risk",
+      data: tasks.filter(
+        t => t.status === "Delayed" || t.status === "Blocked"
+      ),
+    },
+    slow: {
+      label: "Slow Progress",
+      data: tasks.filter(t => {
+        const p =
+          typeof t.progress === "string"
+            ? Number(t.progress.replace("%", ""))
+            : t.progress || 0;
+        return p < 30 && t.status !== "Closed";
+      }),
+    },
+    ontrack: {
+      label: "On Track / Proceed",
+      data: tasks.filter(t => {
+        const p =
+          typeof t.progress === "string"
+            ? Number(t.progress.replace("%", ""))
+            : t.progress || 0;
+        return p >= 70 && t.status === "WIP";
+      }),
+    },
+  }), [tasks]);
+
+  const exportExcel = (rows, name) => {
+    const ws = XLSX.utils.json_to_sheet(
+      rows.map(r => ({
+        Workstream: r.workstream,
+        Deliverable: r.deliverable,
+        Status: r.status,
+        Progress: pct(r.progress),
+        StartDate: fmtDate(r.startDate),
+        EndDate: fmtDate(r.endDate),
+        Owner: r.owner,
+        Phase: r.phase,
+        Milestone: r.milestone,
+      }))
+    );
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Data");
+    XLSX.writeFile(wb, `${name}.xlsx`);
+  };
 
   return (
     <div>
@@ -83,13 +162,7 @@ function Dashboard() {
           <h3 className="font-semibold mb-3">Tasks by Status</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
-              <Pie
-                data={statusData}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={60}
-                outerRadius={90}
-              >
+              <Pie data={statusData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={90}>
                 {statusData.map((_, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
@@ -100,54 +173,117 @@ function Dashboard() {
         </div>
 
         <div className="bg-white rounded shadow p-4">
-          <h3 className="font-semibold mb-3">Tasks by Workstream</h3>
+          <h3 className="font-semibold mb-3">Avg Progress by Workstream (%)</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={workstreamData}>
               <XAxis dataKey="workstream" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="count" fill="#2563eb" />
+              <Bar dataKey="avgProgress" fill="#2563eb" />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* RISK & ATTENTION */}
-      <div className="bg-white rounded shadow p-4">
-        <h3 className="font-semibold mb-4">Risk & Attention Items</h3>
-
-        {riskItems.length === 0 ? (
-          <p className="text-gray-500">No critical risks at the moment</p>
-        ) : (
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-2 text-left">Workstream</th>
-                <th className="p-2 text-left">Deliverable</th>
-                <th className="p-2 text-left">Status</th>
-                <th className="p-2 text-left">Owner</th>
-              </tr>
-            </thead>
-            <tbody>
-              {riskItems.map(item => (
-                <tr key={item.id} className="border-t">
-                  <td className="p-2">{item.workstream}</td>
-                  <td className="p-2">{item.deliverable}</td>
-                  <td className="p-2 font-semibold text-red-600">
-                    {item.status}
-                  </td>
-                  <td className="p-2">{item.owner}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+      {/* ALWAYS VISIBLE RISK TABLE */}
+      <div className="bg-white rounded shadow p-4 mb-6">
+        <h3 className="font-semibold mb-4 text-red-600">
+          Delayed & Blocked Tasks
+        </h3>
+        <SignalTable data={signals.risk.data} />
       </div>
+
+      {/* SIGNAL BUTTONS – IMAGE MATCHED */}
+      <div className="flex gap-3 mb-4">
+        {Object.entries(signals).map(([key, cfg]) => {
+          const active = activeSignal === key;
+          return (
+            <button
+              key={key}
+              className={`px-4 py-2 rounded-md text-sm font-medium border transition
+                ${
+                  active
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50"
+                }`}
+              onClick={() => setActiveSignal(active ? null : key)}
+            >
+              {cfg.label} ({cfg.data.length})
+            </button>
+          );
+        })}
+      </div>
+
+      {/* CLICKABLE TABLE */}
+      {activeSignal && (
+        <div className="bg-white rounded shadow p-4">
+          <div className="flex justify-between mb-3">
+            <h3 className="font-semibold">
+              {signals[activeSignal].label}
+            </h3>
+            <div className="flex gap-2">
+              <button
+                className="btn-outline btn-xs"
+                onClick={() =>
+                  exportExcel(
+                    signals[activeSignal].data,
+                    signals[activeSignal].label.replace(/ /g, "_")
+                  )
+                }
+              >
+                Export Excel
+              </button>
+              <button
+                className="btn-secondary btn-xs"
+                onClick={() => setActiveSignal(null)}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <SignalTable data={signals[activeSignal].data} />
+        </div>
+      )}
     </div>
   );
 }
 
-// ---------- KPI CARD COMPONENT ----------
+// ================= TABLE =================
+function SignalTable({ data }) {
+  return data.length === 0 ? (
+    <p className="text-gray-500">No items</p>
+  ) : (
+    <table className="min-w-full text-sm">
+      <thead className="bg-gray-100">
+        <tr>
+          <th className="p-2 text-left">Workstream</th>
+          <th className="p-2 text-left">Deliverable</th>
+          <th className="p-2 text-left">Status</th>
+          <th className="p-2 text-left">Progress</th>
+          <th className="p-2 text-left">Start Date</th>
+          <th className="p-2 text-left">End Date</th>
+          <th className="p-2 text-left">Owner</th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.map(r => (
+          <tr key={r.id} className="border-t">
+            <td className="p-2">{r.workstream}</td>
+            <td className="p-2">{r.deliverable}</td>
+            <td className="p-2">{r.status}</td>
+            <td className="p-2">{pct(r.progress)}</td>
+            <td className="p-2">{fmtDate(r.startDate)}</td>
+            <td className="p-2">{fmtDate(r.endDate)}</td>
+            <td className="p-2">{r.owner}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+// ================= KPI CARD =================
 function KpiCard({ title, value, color }) {
   return (
     <motion.div
