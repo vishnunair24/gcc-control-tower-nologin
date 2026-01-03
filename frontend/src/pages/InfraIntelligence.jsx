@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -11,49 +11,54 @@ const fmt = (d) =>
     year: "numeric",
   });
 
-const fmtMonth = (d) =>
-  new Date(d).toLocaleDateString("en-GB", {
-    month: "short",
-    year: "numeric",
-  });
-
-export default function ProgramIntelligence() {
+export default function InfraIntelligence() {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
 
-  // ================= TIMELINE CONTROLS =================
+  // =========================
+  // Timeline controls (RESTORED)
+  // =========================
   const [useCustomStart, setUseCustomStart] = useState(false);
   const [customStart, setCustomStart] = useState("");
   const [weeks, setWeeks] = useState(5);
-  const [months, setMonths] = useState(3);
+  const [months, setMonths] = useState(2);
   const [viewMode, setViewMode] = useState("weekly");
   const [showToday, setShowToday] = useState(false);
 
-  // ================= UI STATE =================
+  // =========================
+  // UI state
+  // =========================
   const [expanded, setExpanded] = useState({});
   const [filters, setFilters] = useState({
-    workstream: "",
-    deliverable: "",
+    infraPhase: "",
+    taskName: "",
     owner: "",
     status: "",
   });
 
-  // ================= LOAD DATA =================
+  // =========================
+  // Load Infra Tasks
+  // =========================
   useEffect(() => {
-    axios.get("http://localhost:4000/tasks").then((res) => {
-      setTasks(res.data || []);
-    });
+    axios
+      .get("http://localhost:4000/infra-tasks")
+      .then((res) => setTasks(res.data || []));
   }, []);
 
-  // ================= DATA PREP =================
+  // =========================
+  // Valid tasks
+  // =========================
   const validTasks = useMemo(
     () =>
       tasks.filter(
-        (t) => t.workstream && t.startDate && t.endDate
+        (t) => t.infraPhase && t.startDate && t.endDate
       ),
     [tasks]
   );
 
+  // =========================
+  // Timeline bounds (SAME LOGIC)
+  // =========================
   const originalStart = useMemo(() => {
     if (!validTasks.length) return null;
     return new Date(
@@ -75,41 +80,54 @@ export default function ProgramIntelligence() {
   const viewDuration =
     viewStart && viewEnd ? viewEnd - viewStart : 0;
 
-  // ================= FILTERING =================
+  // =========================
+  // Filters
+  // =========================
   const filteredTasks = useMemo(() => {
     return validTasks.filter((t) =>
-      (!filters.workstream ||
-        t.workstream.toLowerCase().includes(filters.workstream.toLowerCase())) &&
-      (!filters.deliverable ||
-        t.deliverable?.toLowerCase().includes(filters.deliverable.toLowerCase())) &&
+      (!filters.infraPhase ||
+        t.infraPhase
+          .toLowerCase()
+          .includes(filters.infraPhase.toLowerCase())) &&
+      (!filters.taskName ||
+        t.taskName
+          .toLowerCase()
+          .includes(filters.taskName.toLowerCase())) &&
       (!filters.owner || t.owner === filters.owner) &&
       (!filters.status || t.status === filters.status)
     );
   }, [validTasks, filters]);
 
-  // ================= WORKSTREAM GROUPING =================
-  const workstreams = useMemo(() => {
+  // =========================
+  // Group by Infra Phase
+  // =========================
+  const phases = useMemo(() => {
     const map = {};
     filteredTasks.forEach((t) => {
-      if (!map[t.workstream]) {
-        map[t.workstream] = {
-          name: t.workstream,
+      if (!map[t.infraPhase]) {
+        map[t.infraPhase] = {
+          name: t.infraPhase,
           items: [],
           start: new Date(t.startDate),
           end: new Date(t.endDate),
-          minProgress: t.progress ?? 0,
+          minProgress: t.percentComplete ?? 0,
         };
       }
-      const ws = map[t.workstream];
-      ws.items.push(t);
-      ws.start = new Date(Math.min(ws.start, new Date(t.startDate)));
-      ws.end = new Date(Math.max(ws.end, new Date(t.endDate)));
-      ws.minProgress = Math.min(ws.minProgress, t.progress ?? 0);
+      const p = map[t.infraPhase];
+      p.items.push(t);
+      p.start = new Date(Math.min(p.start, new Date(t.startDate)));
+      p.end = new Date(Math.max(p.end, new Date(t.endDate)));
+      p.minProgress = Math.min(
+        p.minProgress,
+        t.percentComplete ?? 0
+      );
     });
     return Object.values(map);
   }, [filteredTasks]);
 
-  // ================= BAR POSITION =================
+  // =========================
+  // Bar positioning
+  // =========================
   const barStyle = (start, end) => {
     if (!viewStart || !viewEnd) return null;
 
@@ -123,21 +141,14 @@ export default function ProgramIntelligence() {
     };
   };
 
-  // ================= TIME MARKERS =================
-  const timeMarkers = [];
+  // =========================
+  // Timeline markers (CLAMPED FIX)
+  // =========================
+  const markers = [];
   if (viewStart) {
-    if (viewMode === "monthly") {
-      const d = new Date(viewStart);
-      d.setDate(1);
-      for (let i = 0; i <= months; i++) {
-        const m = new Date(d);
-        m.setMonth(d.getMonth() + i);
-        timeMarkers.push(m);
-      }
-    } else {
-      for (let i = 0; i <= weeks * 7; i += 7) {
-        timeMarkers.push(new Date(viewStart.getTime() + i * DAY));
-      }
+    const step = viewMode === "monthly" ? 30 : 7;
+    for (let i = 0; i <= viewDays; i += step) {
+      markers.push(new Date(viewStart.getTime() + i * DAY));
     }
   }
 
@@ -148,95 +159,46 @@ export default function ProgramIntelligence() {
     today >= viewStart &&
     today <= viewEnd;
 
-  const ownerOptions = [...new Set(tasks.map((t) => t.owner).filter(Boolean))];
-
-  // ================= PROGRAM HEALTH =================
-  const programHealth = useMemo(() => {
-    const atRiskWs = new Set();
-    let blockedCount = 0;
-
-    filteredTasks.forEach((t) => {
-      if (t.status === "Delayed" || t.status === "Blocked") {
-        atRiskWs.add(t.workstream);
-      }
-      if (t.status === "Blocked") blockedCount++;
-    });
-
-    const executable = filteredTasks.filter(
-      (t) =>
-        t.status === "WIP" &&
-        (t.progress ?? 0) >= 60 &&
-        new Date(t.endDate) >= today
-    );
-
-    const executionHealth = filteredTasks.length
-      ? Math.round((executable.length / filteredTasks.length) * 100)
-      : 0;
-
-    let confidence = "High";
-    if (blockedCount > 0 || executionHealth < 50) confidence = "Low";
-    else if (executionHealth < 70) confidence = "Medium";
-
-    return {
-      executionHealth,
-      atRiskCount: atRiskWs.size,
-      blockedCount,
-      confidence,
-    };
-  }, [filteredTasks, today]);
-
-  const applyAtRiskFilter = () => {
-    setFilters({
-      workstream: "",
-      deliverable: "",
-      owner: "",
-      status: "Delayed",
-    });
-  };
-
-  const applyBlockedFilter = () => {
-    setFilters({
-      workstream: "",
-      deliverable: "",
-      owner: "",
-      status: "Blocked",
-    });
-  };
+  const ownerOptions = [
+    ...new Set(tasks.map((t) => t.owner).filter(Boolean)),
+  ];
 
   return (
     <div className="p-6 text-sm">
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-3">
+      <div className="flex items-center justify-between mb-3">
         <h2 className="text-xl font-semibold">
-          Program Intelligence
+          Infra Setup Intelligence
         </h2>
 
         <button
-          className="btn-primary btn-xs"
-          onClick={() => navigate("/infra-intelligence")}
+          className="btn-outline btn-xs"
+          onClick={() => navigate("/program-intelligence")}
         >
-          Click to view Infra Setup Timeline
+          ← Back to Program Intelligence
         </button>
       </div>
 
       {/* FILTERS */}
       <div className="flex flex-wrap gap-3 mb-3 text-xs items-center">
         <input
-          placeholder="Workstream"
-          value={filters.workstream}
+          placeholder="Infra Phase"
+          value={filters.infraPhase}
           onChange={(e) =>
-            setFilters({ ...filters, workstream: e.target.value })
+            setFilters({ ...filters, infraPhase: e.target.value })
           }
           className="px-2 py-1 border rounded w-40"
         />
+
         <input
-          placeholder="Deliverable"
-          value={filters.deliverable}
+          placeholder="Task Name"
+          value={filters.taskName}
           onChange={(e) =>
-            setFilters({ ...filters, deliverable: e.target.value })
+            setFilters({ ...filters, taskName: e.target.value })
           }
           className="px-2 py-1 border rounded w-44"
         />
+
         <select
           value={filters.owner}
           onChange={(e) =>
@@ -249,6 +211,7 @@ export default function ProgramIntelligence() {
             <option key={o}>{o}</option>
           ))}
         </select>
+
         <select
           value={filters.status}
           onChange={(e) =>
@@ -257,18 +220,19 @@ export default function ProgramIntelligence() {
           className="px-2 py-1 border rounded"
         >
           <option value="">All Status</option>
+          <option>Planned</option>
           <option>WIP</option>
-          <option>Delayed</option>
           <option>Blocked</option>
-          <option>Closed</option>
+          <option>Completed</option>
         </select>
 
+        {/* CLEAR FILTERS */}
         <button
           className="btn-secondary btn-xs"
           onClick={() =>
             setFilters({
-              workstream: "",
-              deliverable: "",
+              infraPhase: "",
+              taskName: "",
               owner: "",
               status: "",
             })
@@ -278,7 +242,7 @@ export default function ProgramIntelligence() {
         </button>
       </div>
 
-      {/* CONTROLS */}
+      {/* CONTROLS (RESTORED ORDER & STYLE) */}
       <div className="flex flex-wrap gap-4 mb-3 text-xs items-center">
         <label>
           <input
@@ -297,7 +261,7 @@ export default function ProgramIntelligence() {
           />
         )}
 
-        {viewMode === "weekly" && (
+        {viewMode === "weekly" ? (
           <div className="flex items-center gap-1">
             <input
               type="number"
@@ -310,9 +274,7 @@ export default function ProgramIntelligence() {
             />
             <span className="text-gray-500">weeks</span>
           </div>
-        )}
-
-        {viewMode === "monthly" && (
+        ) : (
           <div className="flex items-center gap-1">
             <input
               type="number"
@@ -337,12 +299,14 @@ export default function ProgramIntelligence() {
         </label>
 
         <button
-          className="btn-outline btn-xs"
+          className="btn-secondary btn-xs"
           onClick={() =>
-            setViewMode((m) => (m === "weekly" ? "monthly" : "weekly"))
+            setViewMode(viewMode === "weekly" ? "monthly" : "weekly")
           }
         >
-          {viewMode === "weekly" ? "Monthly View" : "Weekly View"}
+          {viewMode === "weekly"
+            ? "Monthly View"
+            : "Weekly View"}
         </button>
       </div>
 
@@ -358,70 +322,75 @@ export default function ProgramIntelligence() {
             />
           )}
 
+          {/* DATE MARKERS */}
           <div className="relative h-6 mb-2 ml-52 text-[11px] text-gray-500 overflow-hidden">
-            {timeMarkers.map((d) => {
-              const rawLeft = ((d - viewStart) / viewDuration) * 100;
-              const left = Math.min(Math.max(rawLeft, 0), 96);
+            {markers.map((m) => {
+              const rawLeft =
+                ((m - viewStart) / viewDuration) * 100;
+              const left = Math.min(
+                Math.max(rawLeft, 0),
+                96
+              );
+
               return (
                 <span
-                  key={d}
+                  key={m}
                   className="absolute"
                   style={{ left: `${left}%` }}
                 >
-                  {viewMode === "monthly" ? fmtMonth(d) : fmt(d)}
+                  {fmt(m)}
                 </span>
               );
             })}
           </div>
 
           <div className="bg-white rounded shadow p-3 space-y-2 overflow-hidden">
-            {workstreams.map((ws) => {
-              const wsBar = barStyle(ws.start, ws.end);
+            {phases.map((p) => {
+              const pBar = barStyle(p.start, p.end);
 
               return (
-                <div key={ws.name}>
+                <div key={p.name}>
                   <div className="flex gap-3 items-center mb-1">
                     <button
                       className="w-4"
                       onClick={() =>
                         setExpanded((e) => ({
                           ...e,
-                          [ws.name]: !e[ws.name],
+                          [p.name]: !e[p.name],
                         }))
                       }
                     >
-                      {expanded[ws.name] ? "▾" : "▸"}
+                      {expanded[p.name] ? "▾" : "▸"}
                     </button>
 
                     <div className="w-44 truncate font-medium">
-                      {ws.name}
+                      {p.name}
                     </div>
 
                     <div className="relative flex-1 h-2.5 bg-gray-100 rounded overflow-hidden">
-                      {wsBar && (
+                      {pBar && (
                         <div
                           className="absolute h-2.5 rounded"
                           style={{
-                            ...wsBar,
+                            ...pBar,
                             background: `linear-gradient(
                               to right,
                               #16a34a 0%,
-                              #16a34a ${ws.minProgress}%,
-                              #dc2626 ${ws.minProgress}%,
+                              #16a34a ${p.minProgress}%,
+                              #dc2626 ${p.minProgress}%,
                               #dc2626 100%
                             )`,
                           }}
-                          title={`Workstream: ${ws.name}
-Start: ${fmt(ws.start)}
-End: ${fmt(ws.end)}
-Min Progress: ${ws.minProgress}%`}
+                          title={`Start: ${fmt(p.start)}
+End: ${fmt(p.end)}
+Progress: ${p.minProgress}%`}
                         />
                       )}
                     </div>
                   </div>
 
-                  {expanded[ws.name] &&
-                    ws.items.map((t) => {
+                  {expanded[p.name] &&
+                    p.items.map((t) => {
                       const dBar = barStyle(
                         new Date(t.startDate),
                         new Date(t.endDate)
@@ -429,9 +398,12 @@ Min Progress: ${ws.minProgress}%`}
                       if (!dBar) return null;
 
                       return (
-                        <div key={t.id} className="flex gap-3 ml-6 mb-1">
+                        <div
+                          key={t.id}
+                          className="flex gap-3 ml-6 mb-1"
+                        >
                           <div className="w-44 truncate text-[11px]">
-                            {t.deliverable}
+                            {t.taskName}
                           </div>
 
                           <div className="relative flex-1 h-1.5 bg-gray-100 rounded overflow-hidden">
@@ -442,17 +414,17 @@ Min Progress: ${ws.minProgress}%`}
                                 background: `linear-gradient(
                                   to right,
                                   #16a34a 0%,
-                                  #16a34a ${t.progress}%,
-                                  #dc2626 ${t.progress}%,
+                                  #16a34a ${t.percentComplete}%,
+                                  #dc2626 ${t.percentComplete}%,
                                   #dc2626 100%
                                 )`,
                               }}
-                              title={`Deliverable: ${t.deliverable}
+                              title={`Task: ${t.taskName}
 Owner: ${t.owner}
 Status: ${t.status}
 Start: ${fmt(t.startDate)}
 End: ${fmt(t.endDate)}
-Progress: ${t.progress}%`}
+Progress: ${t.percentComplete}%`}
                             />
                           </div>
                         </div>
@@ -464,49 +436,6 @@ Progress: ${t.progress}%`}
           </div>
         </div>
       )}
-
-      {/* ================= PROGRAM HEALTH SNAPSHOT ================= */}
-      <div className="mt-6 bg-white rounded shadow p-4">
-        <h3 className="text-sm font-semibold mb-3">
-          Program Health Snapshot
-        </h3>
-
-        <div className="grid grid-cols-4 gap-4 text-xs">
-          <div>
-            <div className="text-gray-500">Execution Health</div>
-            <div className="text-lg font-semibold text-red-600">
-              {programHealth.executionHealth}%
-            </div>
-          </div>
-
-          <div>
-            <div className="text-gray-500">At-Risk Workstreams</div>
-            <button
-              onClick={applyAtRiskFilter}
-              className="text-lg font-semibold text-red-600 underline"
-            >
-              {programHealth.atRiskCount}
-            </button>
-          </div>
-
-          <div>
-            <div className="text-gray-500">Critical Blockers</div>
-            <button
-              onClick={applyBlockedFilter}
-              className="text-lg font-semibold text-red-700 underline"
-            >
-              {programHealth.blockedCount}
-            </button>
-          </div>
-
-          <div>
-            <div className="text-gray-500">Delivery Confidence</div>
-            <div className="text-lg font-semibold text-red-600">
-              {programHealth.confidence}
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

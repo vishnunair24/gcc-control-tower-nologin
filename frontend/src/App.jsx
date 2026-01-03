@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Tracker from "./pages/Tracker";
 import ProgramIntelligence from "./pages/ProgramIntelligence";
 import InfraTracker from "./pages/InfraTracker";
+import InfraIntelligence from "./pages/InfraIntelligence";
 
 import summitLogo from "./assets/summit-logo.png";
 
@@ -44,7 +45,7 @@ function App() {
             src={summitLogo}
             alt="Summit Consulting"
             style={{
-              height: "40px", // ✅ balanced, visible, professional
+              height: "40px",
               objectFit: "contain",
             }}
           />
@@ -60,9 +61,17 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/tracker" element={<Tracker />} />
             <Route path="/infra-tracker" element={<InfraTracker />} />
+
+            {/* EXISTING */}
             <Route
               path="/program-intelligence"
               element={<ProgramIntelligence />}
+            />
+
+            {/* 🆕 INFRA INTELLIGENCE (APPENDED ONLY) */}
+            <Route
+              path="/infra-intelligence"
+              element={<InfraIntelligence />}
             />
           </Routes>
         </main>
