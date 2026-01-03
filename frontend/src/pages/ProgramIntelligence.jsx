@@ -134,6 +134,63 @@ export default function ProgramIntelligence() {
     ...new Set(tasks.map((t) => t.owner).filter(Boolean)),
   ];
 
+  /* =======================
+     PROGRAM HEALTH ANALYTICS
+     ======================= */
+  const programHealth = useMemo(() => {
+    const atRiskWs = new Set();
+    let blockedCount = 0;
+
+    filteredTasks.forEach((t) => {
+      if (t.status === "Delayed" || t.status === "Blocked") {
+        atRiskWs.add(t.workstream);
+      }
+      if (t.status === "Blocked") blockedCount++;
+    });
+
+    const executable = filteredTasks.filter(
+      (t) =>
+        t.status === "WIP" &&
+        (t.progress ?? 0) >= 60 &&
+        new Date(t.endDate) >= today
+    );
+
+    const executionHealth = filteredTasks.length
+      ? Math.round(
+          (executable.length / filteredTasks.length) * 100
+        )
+      : 0;
+
+    let confidence = "High";
+    if (blockedCount > 0 || executionHealth < 50) confidence = "Low";
+    else if (executionHealth < 70) confidence = "Medium";
+
+    return {
+      executionHealth,
+      atRiskCount: atRiskWs.size,
+      blockedCount,
+      confidence,
+    };
+  }, [filteredTasks]);
+
+  const applyAtRiskFilter = () => {
+    setFilters({
+      workstream: "",
+      deliverable: "",
+      owner: "",
+      status: "Delayed",
+    });
+  };
+
+  const applyBlockedFilter = () => {
+    setFilters({
+      workstream: "",
+      deliverable: "",
+      owner: "",
+      status: "Blocked",
+    });
+  };
+
   return (
     <div className="p-6 text-sm">
       <h2 className="text-xl font-semibold mb-3">
@@ -246,9 +303,9 @@ export default function ProgramIntelligence() {
         </label>
       </div>
 
+      {/* ================= GANTT (UNCHANGED) ================= */}
       {viewStart && (
         <div className="relative">
-          {/* TODAY LINE – FULL HEIGHT, ANIMATED */}
           {showTodayLine && (
             <div
               className="absolute top-0 bottom-0 w-[2px] bg-blue-400 opacity-60 z-30 animate-pulse pointer-events-none"
@@ -257,11 +314,9 @@ export default function ProgramIntelligence() {
                   ((today - viewStart) / viewDuration) * 100
                 }%`,
               }}
-              title="Today"
             />
           )}
 
-          {/* WEEK HEADER */}
           <div className="relative h-6 mb-2 ml-52 text-[11px] text-gray-500 overflow-hidden">
             {weekMarkers.map((w) => {
               const rawLeft =
@@ -279,7 +334,6 @@ export default function ProgramIntelligence() {
             })}
           </div>
 
-          {/* GANTT */}
           <div className="bg-white rounded shadow p-3 space-y-2 overflow-hidden">
             {workstreams.map((ws) => {
               const wsBar = barStyle(ws.start, ws.end);
@@ -364,6 +418,49 @@ Progress: ${t.progress}%`}
           </div>
         </div>
       )}
+
+      {/* ================= PROGRAM HEALTH SNAPSHOT ================= */}
+      <div className="mt-6 bg-white rounded shadow p-4">
+        <h3 className="text-sm font-semibold mb-3">
+          Program Health Snapshot
+        </h3>
+
+        <div className="grid grid-cols-4 gap-4 text-xs">
+          <div>
+            <div className="text-gray-500">Execution Health</div>
+            <div className="text-lg font-semibold text-red-600">
+              {programHealth.executionHealth}%
+            </div>
+          </div>
+
+          <div>
+            <div className="text-gray-500">At-Risk Workstreams</div>
+            <button
+              onClick={applyAtRiskFilter}
+              className="text-lg font-semibold text-red-600 underline"
+            >
+              {programHealth.atRiskCount}
+            </button>
+          </div>
+
+          <div>
+            <div className="text-gray-500">Critical Blockers</div>
+            <button
+              onClick={applyBlockedFilter}
+              className="text-lg font-semibold text-red-700 underline"
+            >
+              {programHealth.blockedCount}
+            </button>
+          </div>
+
+          <div>
+            <div className="text-gray-500">Delivery Confidence</div>
+            <div className="text-lg font-semibold text-red-600">
+              {programHealth.confidence}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
