@@ -10,16 +10,32 @@ const fmt = (d) =>
     year: "numeric",
   });
 
+const fmtMonth = (d) =>
+  new Date(d).toLocaleDateString("en-GB", {
+    month: "short",
+    year: "numeric",
+  });
+
 export default function ProgramIntelligence() {
   const [tasks, setTasks] = useState([]);
 
-  // timeline controls
+  // =========================
+  // timeline controls (EXISTING)
+  // =========================
   const [useCustomStart, setUseCustomStart] = useState(false);
   const [customStart, setCustomStart] = useState("");
   const [weeks, setWeeks] = useState(5);
-  const [showToday, setShowToday] = useState(true);
+  const [showToday, setShowToday] = useState(false);
 
-  // ui state
+  /* =========================
+     🆕 APPENDED CONTROLS
+  ========================= */
+  const [viewMode, setViewMode] = useState("weekly"); // weekly | monthly
+  const [months, setMonths] = useState(3);
+
+  // =========================
+  // ui state (EXISTING)
+  // =========================
   const [expanded, setExpanded] = useState({});
   const [filters, setFilters] = useState({
     workstream: "",
@@ -34,6 +50,9 @@ export default function ProgramIntelligence() {
     });
   }, []);
 
+  // =========================
+  // data prep (EXISTING)
+  // =========================
   const validTasks = useMemo(
     () =>
       tasks.filter(
@@ -54,12 +73,24 @@ export default function ProgramIntelligence() {
     return originalStart;
   }, [useCustomStart, customStart, originalStart]);
 
-  const viewDays = weeks * 7;
+  /* =========================
+     🆕 VIEW WINDOW (APPENDED)
+  ========================= */
+  const weeklyViewDays = weeks * 7;
+  const monthlyViewDays = months * 30;
+
+  const viewDays =
+    viewMode === "monthly" ? monthlyViewDays : weeklyViewDays;
+
   const viewEnd =
     viewStart && new Date(viewStart.getTime() + viewDays * DAY);
+
   const viewDuration =
     viewStart && viewEnd ? viewEnd - viewStart : 0;
 
+  // =========================
+  // filtering (EXISTING)
+  // =========================
   const filteredTasks = useMemo(() => {
     return validTasks.filter((t) =>
       (!filters.workstream ||
@@ -71,6 +102,9 @@ export default function ProgramIntelligence() {
     );
   }, [validTasks, filters]);
 
+  // =========================
+  // workstreams (EXISTING)
+  // =========================
   const workstreams = useMemo(() => {
     const map = {};
     filteredTasks.forEach((t) => {
@@ -92,6 +126,9 @@ export default function ProgramIntelligence() {
     return Object.values(map);
   }, [filteredTasks]);
 
+  // =========================
+  // bar calculation (EXISTING)
+  // =========================
   const barStyle = (start, end) => {
     if (!viewStart || !viewEnd) return null;
 
@@ -105,10 +142,23 @@ export default function ProgramIntelligence() {
     };
   };
 
-  const weekMarkers = [];
+  /* =========================
+     🆕 TIME MARKERS (APPENDED)
+  ========================= */
+  const timeMarkers = [];
   if (viewStart) {
-    for (let i = 0; i <= viewDays; i += 7) {
-      weekMarkers.push(new Date(viewStart.getTime() + i * DAY));
+    if (viewMode === "monthly") {
+      const d = new Date(viewStart);
+      d.setDate(1);
+      for (let i = 0; i <= months; i++) {
+        const m = new Date(d);
+        m.setMonth(d.getMonth() + i);
+        timeMarkers.push(m);
+      }
+    } else {
+      for (let i = 0; i <= weeklyViewDays; i += 7) {
+        timeMarkers.push(new Date(viewStart.getTime() + i * DAY));
+      }
     }
   }
 
@@ -121,7 +171,7 @@ export default function ProgramIntelligence() {
 
   const ownerOptions = [...new Set(tasks.map((t) => t.owner).filter(Boolean))];
 
-  /* ================= PROGRAM HEALTH ANALYTICS ================= */
+  /* ================= PROGRAM HEALTH (EXISTING) ================= */
   const programHealth = useMemo(() => {
     const atRiskWs = new Set();
     let blockedCount = 0;
@@ -180,7 +230,7 @@ export default function ProgramIntelligence() {
         Program Intelligence
       </h2>
 
-      {/* FILTERS */}
+      {/* FILTERS (UNCHANGED) */}
       <div className="flex flex-wrap gap-3 mb-3 text-xs items-center">
         <input
           placeholder="Workstream"
@@ -258,19 +308,35 @@ export default function ProgramIntelligence() {
           />
         )}
 
-        <div className="flex items-center gap-1">
-          <input
-            type="number"
-            min={1}
-            step={1}
-            value={weeks}
-            onChange={(e) =>
-              setWeeks(Math.max(1, Math.floor(+e.target.value || 1)))
-            }
-            className="w-16 px-1 border rounded"
-          />
-          <span className="text-gray-500">weeks</span>
-        </div>
+        {viewMode === "weekly" && (
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              min={1}
+              value={weeks}
+              onChange={(e) =>
+                setWeeks(Math.max(1, Math.floor(+e.target.value || 1)))
+              }
+              className="w-16 px-1 border rounded"
+            />
+            <span className="text-gray-500">weeks</span>
+          </div>
+        )}
+
+        {viewMode === "monthly" && (
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              min={1}
+              value={months}
+              onChange={(e) =>
+                setMonths(Math.max(1, Math.floor(+e.target.value || 1)))
+              }
+              className="w-16 px-1 border rounded"
+            />
+            <span className="text-gray-500">months</span>
+          </div>
+        )}
 
         <label>
           <input
@@ -280,6 +346,15 @@ export default function ProgramIntelligence() {
           />{" "}
           Show today
         </label>
+
+        <button
+          className="btn-outline btn-xs"
+          onClick={() =>
+            setViewMode((m) => (m === "weekly" ? "monthly" : "weekly"))
+          }
+        >
+          {viewMode === "weekly" ? "Monthly View" : "Weekly View"}
+        </button>
       </div>
 
       {/* ================= GANTT ================= */}
@@ -295,16 +370,16 @@ export default function ProgramIntelligence() {
           )}
 
           <div className="relative h-6 mb-2 ml-52 text-[11px] text-gray-500 overflow-hidden">
-            {weekMarkers.map((w) => {
-              const rawLeft = ((w - viewStart) / viewDuration) * 100;
+            {timeMarkers.map((d) => {
+              const rawLeft = ((d - viewStart) / viewDuration) * 100;
               const left = Math.min(Math.max(rawLeft, 0), 96);
               return (
                 <span
-                  key={w}
+                  key={d}
                   className="absolute"
                   style={{ left: `${left}%` }}
                 >
-                  {fmt(w)}
+                  {viewMode === "monthly" ? fmtMonth(d) : fmt(d)}
                 </span>
               );
             })}
@@ -347,9 +422,6 @@ export default function ProgramIntelligence() {
                               #dc2626 100%
                             )`,
                           }}
-                          title={`Start: ${fmt(ws.start)}
-End: ${fmt(ws.end)}
-Progress: ${ws.minProgress}%`}
                         />
                       )}
                     </div>
@@ -382,12 +454,6 @@ Progress: ${ws.minProgress}%`}
                                   #dc2626 100%
                                 )`,
                               }}
-                              title={`Deliverable: ${t.deliverable}
-Owner: ${t.owner}
-Status: ${t.status}
-Start: ${fmt(t.startDate)}
-End: ${fmt(t.endDate)}
-Progress: ${t.progress}%`}
                             />
                           </div>
                         </div>
