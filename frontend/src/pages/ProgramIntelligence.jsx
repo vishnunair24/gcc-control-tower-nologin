@@ -10,13 +10,6 @@ const fmt = (d) =>
     year: "numeric",
   });
 
-const colorByProgress = (p = 0) => {
-  if (p < 30) return "#dc2626";
-  if (p < 60) return "#f59e0b";
-  if (p < 90) return "#2563eb";
-  return "#16a34a";
-};
-
 export default function ProgramIntelligence() {
   const [tasks, setTasks] = useState([]);
 
@@ -70,13 +63,9 @@ export default function ProgramIntelligence() {
   const filteredTasks = useMemo(() => {
     return validTasks.filter((t) =>
       (!filters.workstream ||
-        t.workstream
-          .toLowerCase()
-          .includes(filters.workstream.toLowerCase())) &&
+        t.workstream.toLowerCase().includes(filters.workstream.toLowerCase())) &&
       (!filters.deliverable ||
-        t.deliverable
-          ?.toLowerCase()
-          .includes(filters.deliverable.toLowerCase())) &&
+        t.deliverable?.toLowerCase().includes(filters.deliverable.toLowerCase())) &&
       (!filters.owner || t.owner === filters.owner) &&
       (!filters.status || t.status === filters.status)
     );
@@ -130,13 +119,9 @@ export default function ProgramIntelligence() {
     today >= viewStart &&
     today <= viewEnd;
 
-  const ownerOptions = [
-    ...new Set(tasks.map((t) => t.owner).filter(Boolean)),
-  ];
+  const ownerOptions = [...new Set(tasks.map((t) => t.owner).filter(Boolean))];
 
-  /* =======================
-     PROGRAM HEALTH ANALYTICS
-     ======================= */
+  /* ================= PROGRAM HEALTH ANALYTICS ================= */
   const programHealth = useMemo(() => {
     const atRiskWs = new Set();
     let blockedCount = 0;
@@ -156,9 +141,7 @@ export default function ProgramIntelligence() {
     );
 
     const executionHealth = filteredTasks.length
-      ? Math.round(
-          (executable.length / filteredTasks.length) * 100
-        )
+      ? Math.round((executable.length / filteredTasks.length) * 100)
       : 0;
 
     let confidence = "High";
@@ -171,7 +154,7 @@ export default function ProgramIntelligence() {
       blockedCount,
       confidence,
     };
-  }, [filteredTasks]);
+  }, [filteredTasks, today]);
 
   const applyAtRiskFilter = () => {
     setFilters({
@@ -240,6 +223,7 @@ export default function ProgramIntelligence() {
           <option>Blocked</option>
           <option>Closed</option>
         </select>
+
         <button
           className="btn-secondary btn-xs"
           onClick={() =>
@@ -281,12 +265,7 @@ export default function ProgramIntelligence() {
             step={1}
             value={weeks}
             onChange={(e) =>
-              setWeeks(
-                Math.max(
-                  1,
-                  Math.floor(Number(e.target.value || 1))
-                )
-              )
+              setWeeks(Math.max(1, Math.floor(+e.target.value || 1)))
             }
             className="w-16 px-1 border rounded"
           />
@@ -303,24 +282,21 @@ export default function ProgramIntelligence() {
         </label>
       </div>
 
-      {/* ================= GANTT (UNCHANGED) ================= */}
+      {/* ================= GANTT ================= */}
       {viewStart && (
         <div className="relative">
           {showTodayLine && (
             <div
               className="absolute top-0 bottom-0 w-[2px] bg-blue-400 opacity-60 z-30 animate-pulse pointer-events-none"
               style={{
-                left: `${
-                  ((today - viewStart) / viewDuration) * 100
-                }%`,
+                left: `${((today - viewStart) / viewDuration) * 100}%`,
               }}
             />
           )}
 
           <div className="relative h-6 mb-2 ml-52 text-[11px] text-gray-500 overflow-hidden">
             {weekMarkers.map((w) => {
-              const rawLeft =
-                ((w - viewStart) / viewDuration) * 100;
+              const rawLeft = ((w - viewStart) / viewDuration) * 100;
               const left = Math.min(Math.max(rawLeft, 0), 96);
               return (
                 <span
@@ -363,9 +339,13 @@ export default function ProgramIntelligence() {
                           className="absolute h-2.5 rounded"
                           style={{
                             ...wsBar,
-                            backgroundColor: colorByProgress(
-                              ws.minProgress
-                            ),
+                            background: `linear-gradient(
+                              to right,
+                              #16a34a 0%,
+                              #16a34a ${ws.minProgress}%,
+                              #dc2626 ${ws.minProgress}%,
+                              #dc2626 100%
+                            )`,
                           }}
                           title={`Start: ${fmt(ws.start)}
 End: ${fmt(ws.end)}
@@ -384,10 +364,7 @@ Progress: ${ws.minProgress}%`}
                       if (!dBar) return null;
 
                       return (
-                        <div
-                          key={t.id}
-                          className="flex gap-3 ml-6 mb-1"
-                        >
+                        <div key={t.id} className="flex gap-3 ml-6 mb-1">
                           <div className="w-44 truncate text-[11px]">
                             {t.deliverable}
                           </div>
@@ -397,9 +374,13 @@ Progress: ${ws.minProgress}%`}
                               className="absolute h-1.5 rounded"
                               style={{
                                 ...dBar,
-                                backgroundColor: colorByProgress(
-                                  t.progress
-                                ),
+                                background: `linear-gradient(
+                                  to right,
+                                  #16a34a 0%,
+                                  #16a34a ${t.progress}%,
+                                  #dc2626 ${t.progress}%,
+                                  #dc2626 100%
+                                )`,
                               }}
                               title={`Deliverable: ${t.deliverable}
 Owner: ${t.owner}
