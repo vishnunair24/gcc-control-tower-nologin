@@ -17,6 +17,22 @@ const formatDate = (date) =>
       })
     : "";
 
+/* =========================
+   helper for new rows
+========================= */
+const createEmptyNewRow = () => ({
+  _tempId: crypto.randomUUID(),
+  workstream: "",
+  deliverable: "",
+  status: "WIP",
+  progress: 0,
+  phase: "",
+  milestone: "Ready to Source",
+  startDate: "",
+  endDate: "",
+  owner: "",
+});
+
 export default function Tracker() {
   const navigate = useNavigate();
 
@@ -35,6 +51,7 @@ export default function Tracker() {
   const [editRowId, setEditRowId] = useState(null);
   const [editData, setEditData] = useState({});
   const [excelMessage, setExcelMessage] = useState("");
+  const [newRows, setNewRows] = useState([]);
 
   // =========================
   // Load data
@@ -89,7 +106,7 @@ export default function Tracker() {
   );
 
   // =========================
-  // Edit handling
+  // Existing edit logic
   // =========================
   const startEdit = (task) => {
     setEditRowId(task.id);
@@ -116,7 +133,51 @@ export default function Tracker() {
   };
 
   // =========================
-  // EXPORT TO EXCEL
+  // New row logic
+  // =========================
+  const addNewRow = () => {
+    setNewRows((prev) => [...prev, createEmptyNewRow()]);
+  };
+
+  const updateNewRow = (id, field, value) => {
+    setNewRows((prev) =>
+      prev.map((r) =>
+        r._tempId === id ? { ...r, [field]: value } : r
+      )
+    );
+  };
+
+  const cancelNewRow = (id) => {
+    setNewRows((prev) => prev.filter((r) => r._tempId !== id));
+  };
+
+  const normalizePayload = (row) => ({
+    ...row,
+    startDate: row.startDate || null,
+    endDate: row.endDate || null,
+  });
+
+  const saveNewRow = async (row) => {
+    const payload = normalizePayload(row);
+    delete payload._tempId;
+
+    await axios.post("http://localhost:4000/tasks", payload);
+    setNewRows((prev) => prev.filter((r) => r._tempId !== row._tempId));
+    loadTasks();
+  };
+
+  const saveAllNewRows = async () => {
+    for (const row of newRows) {
+      const payload = normalizePayload(row);
+      delete payload._tempId;
+      await axios.post("http://localhost:4000/tasks", payload);
+    }
+    setNewRows([]);
+    loadTasks();
+  };
+
+  // =========================
+  // Export
   // =========================
   const exportToExcel = () => {
     const exportData = tasks.map((t) => ({
@@ -132,64 +193,48 @@ export default function Tracker() {
       Owner: t.owner,
     }));
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Tracker");
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Tracker");
 
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-
-    const blob = new Blob([excelBuffer], {
-      type:
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    saveAs(blob, "GCC_Program_Tracker.xlsx");
+    const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    saveAs(
+      new Blob([buffer], {
+        type:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      }),
+      "GCC_Program_Tracker.xlsx"
+    );
   };
 
   return (
     <div className="tracker-page">
-      {/* Header */}
       <div className="tracker-header">
         <h2>Program Tracker</h2>
-        <p className="subtitle">
-          End-to-end delivery tracking across workstreams
-        </p>
+        <p className="subtitle">End-to-end delivery tracking across workstreams</p>
       </div>
 
       {/* ACTION BAR */}
-      <div
-        style={{
-          display: "flex",
-          gap: "12px",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+      <div className="action-bar">
+        <div className="left-actions">
           <ExcelReplaceUpload
             endpoint="http://localhost:4000/excel/replace"
             confirmText="This will completely replace ALL Program Tracker data. Continue?"
-            onSuccess={() => {
-              loadTasks();
-              setExcelMessage(
-                "Excel uploaded. Tracker data replaced successfully."
-              );
-              setTimeout(() => setExcelMessage(""), 4000);
-            }}
+            onSuccess={loadTasks}
           />
-
-          <button
-            className="btn-outline btn-xs"
-            onClick={exportToExcel}
-          >
+          <button className="btn-outline btn-xs" onClick={exportToExcel}>
             Download Excel
           </button>
+          <button className="btn-primary btn-xs" onClick={addNewRow}>
+            + Add Row
+          </button>
+          {newRows.length > 0 && (
+            <button className="btn-primary btn-xs" onClick={saveAllNewRows}>
+              Save All New Rows
+            </button>
+          )}
         </div>
 
-        {/* 🔹 SMALL INFRA BUTTON ON RIGHT */}
         <button
           className="btn-primary btn-xs"
           onClick={() => navigate("/infra-tracker")}
@@ -198,11 +243,7 @@ export default function Tracker() {
         </button>
       </div>
 
-      {excelMessage && (
-        <div className="excel-success">{excelMessage}</div>
-      )}
-
-      {/* Filters */}
+      {/* ✅ FILTER BAR (RESTORED) */}
       <div className="filter-bar">
         <select
           value={filters.status}
@@ -273,7 +314,7 @@ export default function Tracker() {
         </button>
       </div>
 
-      {/* Table */}
+      {/* TABLE */}
       <div className="table-container">
         <table className="tracker-table">
           <thead>
@@ -293,112 +334,89 @@ export default function Tracker() {
           </thead>
 
           <tbody>
+            {/* NEW ROWS */}
+            {newRows.map((row) => (
+              <tr key={row._tempId} className="editing-row">
+                <td>New</td>
+                <td><input className="cell-input" value={row.workstream} onChange={(e) => updateNewRow(row._tempId, "workstream", e.target.value)} /></td>
+                <td><input className="cell-input" value={row.deliverable} onChange={(e) => updateNewRow(row._tempId, "deliverable", e.target.value)} /></td>
+                <td>
+                  <select className="cell-input" value={row.status} onChange={(e) => updateNewRow(row._tempId, "status", e.target.value)}>
+                    <option>WIP</option>
+                    <option>Delayed</option>
+                    <option>Blocked</option>
+                    <option>Closed</option>
+                  </select>
+                </td>
+                <td><input type="number" className="cell-input" value={row.progress} onChange={(e) => updateNewRow(row._tempId, "progress", Number(e.target.value))} /></td>
+                <td><input className="cell-input" value={row.phase} onChange={(e) => updateNewRow(row._tempId, "phase", e.target.value)} /></td>
+                <td>
+                  <select className="cell-input" value={row.milestone} onChange={(e) => updateNewRow(row._tempId, "milestone", e.target.value)}>
+                    <option>Ready to Source</option>
+                    <option>Ready to Onboard</option>
+                    <option>Ready to Offer</option>
+                  </select>
+                </td>
+                <td><input type="date" className="cell-input" value={row.startDate} onChange={(e) => updateNewRow(row._tempId, "startDate", e.target.value)} /></td>
+                <td><input type="date" className="cell-input" value={row.endDate} onChange={(e) => updateNewRow(row._tempId, "endDate", e.target.value)} /></td>
+                <td>
+                  <select className="cell-input" value={row.owner} onChange={(e) => updateNewRow(row._tempId, "owner", e.target.value)}>
+                    <option value="">Select</option>
+                    {ownerOptions.map((o) => (
+                      <option key={o}>{o}</option>
+                    ))}
+                  </select>
+                </td>
+                <td>
+                  <button className="btn-primary btn-xs" onClick={() => saveNewRow(row)}>Save</button>
+                  <button className="btn-secondary btn-xs" onClick={() => cancelNewRow(row._tempId)}>Cancel</button>
+                </td>
+              </tr>
+            ))}
+
+            {/* EXISTING ROWS */}
             {pageData.map((task, index) => {
               const isEditing = editRowId === task.id;
 
               return (
                 <tr key={task.id} className={isEditing ? "editing-row" : ""}>
                   <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
-
+                  <td>{isEditing ? <input className="cell-input" value={editData.workstream || ""} onChange={(e) => handleEditChange("workstream", e.target.value)} /> : task.workstream}</td>
+                  <td>{isEditing ? <input className="cell-input" value={editData.deliverable || ""} onChange={(e) => handleEditChange("deliverable", e.target.value)} /> : task.deliverable}</td>
                   <td>{isEditing ? (
-                    <input className="cell-input"
-                      value={editData.workstream || ""}
-                      onChange={(e) =>
-                        handleEditChange("workstream", e.target.value)
-                      } />
-                  ) : task.workstream}</td>
-
-                  <td>{isEditing ? (
-                    <input className="cell-input"
-                      value={editData.deliverable || ""}
-                      onChange={(e) =>
-                        handleEditChange("deliverable", e.target.value)
-                      } />
-                  ) : task.deliverable}</td>
-
-                  <td>{isEditing ? (
-                    <select className="cell-input"
-                      value={editData.status || ""}
-                      onChange={(e) =>
-                        handleEditChange("status", e.target.value)
-                      }>
+                    <select className="cell-input" value={editData.status || ""} onChange={(e) => handleEditChange("status", e.target.value)}>
                       <option>WIP</option>
                       <option>Delayed</option>
                       <option>Blocked</option>
                       <option>Closed</option>
                     </select>
                   ) : task.status}</td>
-
+                  <td>{isEditing ? <input type="number" className="cell-input" value={editData.progress ?? ""} onChange={(e) => handleEditChange("progress", Number(e.target.value))} /> : task.progress}%</td>
+                  <td>{isEditing ? <input className="cell-input" value={editData.phase || ""} onChange={(e) => handleEditChange("phase", e.target.value)} /> : task.phase}</td>
                   <td>{isEditing ? (
-                    <input type="number" className="cell-input"
-                      value={editData.progress ?? ""}
-                      onChange={(e) =>
-                        handleEditChange("progress", Number(e.target.value))
-                      } />
-                  ) : task.progress}%</td>
-
-                  <td>{isEditing ? (
-                    <input className="cell-input"
-                      value={editData.phase || ""}
-                      onChange={(e) =>
-                        handleEditChange("phase", e.target.value)
-                      } />
-                  ) : task.phase}</td>
-
-                  <td>{isEditing ? (
-                    <select className="cell-input"
-                      value={editData.milestone || ""}
-                      onChange={(e) =>
-                        handleEditChange("milestone", e.target.value)
-                      }>
+                    <select className="cell-input" value={editData.milestone || ""} onChange={(e) => handleEditChange("milestone", e.target.value)}>
                       <option>Ready to Source</option>
                       <option>Ready to Onboard</option>
                       <option>Ready to Offer</option>
                     </select>
                   ) : task.milestone}</td>
-
+                  <td>{isEditing ? <input type="date" className="cell-input" value={editData.startDate?.slice(0, 10) || ""} onChange={(e) => handleEditChange("startDate", e.target.value)} /> : formatDate(task.startDate)}</td>
+                  <td>{isEditing ? <input type="date" className="cell-input" value={editData.endDate?.slice(0, 10) || ""} onChange={(e) => handleEditChange("endDate", e.target.value)} /> : formatDate(task.endDate)}</td>
                   <td>{isEditing ? (
-                    <input type="date" className="cell-input"
-                      value={editData.startDate?.slice(0, 10) || ""}
-                      onChange={(e) =>
-                        handleEditChange("startDate", e.target.value)
-                      } />
-                  ) : formatDate(task.startDate)}</td>
-
-                  <td>{isEditing ? (
-                    <input type="date" className="cell-input"
-                      value={editData.endDate?.slice(0, 10) || ""}
-                      onChange={(e) =>
-                        handleEditChange("endDate", e.target.value)
-                      } />
-                  ) : formatDate(task.endDate)}</td>
-
-                  <td>{isEditing ? (
-                    <select className="cell-input"
-                      value={editData.owner || ""}
-                      onChange={(e) =>
-                        handleEditChange("owner", e.target.value)
-                      }>
+                    <select className="cell-input" value={editData.owner || ""} onChange={(e) => handleEditChange("owner", e.target.value)}>
                       {ownerOptions.map((o) => (
                         <option key={o}>{o}</option>
                       ))}
                     </select>
                   ) : task.owner}</td>
-
                   <td>
                     {isEditing ? (
                       <>
-                        <button className="btn-primary btn-xs" onClick={saveEdit}>
-                          Save
-                        </button>
-                        <button className="btn-secondary btn-xs" onClick={cancelEdit}>
-                          Cancel
-                        </button>
+                        <button className="btn-primary btn-xs" onClick={saveEdit}>Save</button>
+                        <button className="btn-secondary btn-xs" onClick={cancelEdit}>Cancel</button>
                       </>
                     ) : (
-                      <button className="btn-outline btn-xs" onClick={() => startEdit(task)}>
-                        Edit
-                      </button>
+                      <button className="btn-outline btn-xs" onClick={() => startEdit(task)}>Edit</button>
                     )}
                   </td>
                 </tr>

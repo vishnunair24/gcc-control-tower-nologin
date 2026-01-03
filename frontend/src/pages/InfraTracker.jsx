@@ -11,6 +11,20 @@ const PAGE_SIZE = 15;
 const formatDate = (date) =>
   date ? new Date(date).toISOString().slice(0, 10) : "";
 
+/* =========================
+   🆕 helper for new rows
+========================= */
+const createEmptyNewRow = () => ({
+  _tempId: crypto.randomUUID(),
+  infraPhase: "",
+  taskName: "",
+  status: "Planned",
+  percentComplete: 0,
+  startDate: "",
+  endDate: "",
+  owner: "",
+});
+
 export default function InfraTracker() {
   const navigate = useNavigate();
 
@@ -28,6 +42,11 @@ export default function InfraTracker() {
   const [editRowId, setEditRowId] = useState(null);
   const [editData, setEditData] = useState({});
   const [excelMessage, setExcelMessage] = useState("");
+
+  /* =========================
+     🆕 NEW ROW STATE (APPENDED)
+  ========================= */
+  const [newRows, setNewRows] = useState([]);
 
   // =========================
   // Load Infra Tasks
@@ -49,7 +68,7 @@ export default function InfraTracker() {
   }, [tasks]);
 
   // =========================
-  // Apply filters
+  // Apply filters (UNCHANGED)
   // =========================
   useEffect(() => {
     const data = tasks.filter((t) => {
@@ -77,7 +96,7 @@ export default function InfraTracker() {
   );
 
   // =========================
-  // Edit handling
+  // Existing Edit handling (UNCHANGED)
   // =========================
   const startEdit = (task) => {
     setEditRowId(task.id);
@@ -100,6 +119,51 @@ export default function InfraTracker() {
     );
     setEditRowId(null);
     setEditData({});
+    loadTasks();
+  };
+
+  /* =========================
+     🆕 NEW ROW HANDLERS
+  ========================= */
+  const addNewRow = () => {
+    setNewRows((prev) => [...prev, createEmptyNewRow()]);
+  };
+
+  const updateNewRow = (id, field, value) => {
+    setNewRows((prev) =>
+      prev.map((r) =>
+        r._tempId === id ? { ...r, [field]: value } : r
+      )
+    );
+  };
+
+  const cancelNewRow = (id) => {
+    setNewRows((prev) => prev.filter((r) => r._tempId !== id));
+  };
+
+  const normalizePayload = (row) => ({
+    ...row,
+    startDate: row.startDate || null,
+    endDate: row.endDate || null,
+  });
+
+  const saveNewRow = async (row) => {
+    const payload = normalizePayload(row);
+    delete payload._tempId;
+
+    await axios.post("http://localhost:4000/infra-tasks", payload);
+
+    setNewRows((prev) => prev.filter((r) => r._tempId !== row._tempId));
+    loadTasks();
+  };
+
+  const saveAllNewRows = async () => {
+    for (const row of newRows) {
+      const payload = normalizePayload(row);
+      delete payload._tempId;
+      await axios.post("http://localhost:4000/infra-tasks", payload);
+    }
+    setNewRows([]);
     loadTasks();
   };
 
@@ -144,7 +208,7 @@ export default function InfraTracker() {
         </p>
       </div>
 
-      {/* ACTION BAR (MATCHES PROGRAM TRACKER) */}
+      {/* ACTION BAR (UNCHANGED LAYOUT) */}
       <div
         style={{
           display: "flex",
@@ -168,6 +232,17 @@ export default function InfraTracker() {
           <button className="btn-outline btn-xs" onClick={exportToExcel}>
             Download Excel
           </button>
+
+          {/* 🆕 ADD ROW BUTTON */}
+          <button className="btn-primary btn-xs" onClick={addNewRow}>
+            + Add Row
+          </button>
+
+          {newRows.length > 0 && (
+            <button className="btn-primary btn-xs" onClick={saveAllNewRows}>
+              Save All New Rows
+            </button>
+          )}
         </div>
 
         {/* RIGHT SIDE */}
@@ -183,7 +258,7 @@ export default function InfraTracker() {
         <div className="excel-success">{excelMessage}</div>
       )}
 
-      {/* Filters */}
+      {/* Filters (UNCHANGED) */}
       <div className="filter-bar">
         <input
           placeholder="Infra Phase"
@@ -259,145 +334,80 @@ export default function InfraTracker() {
           </thead>
 
           <tbody>
+            {/* 🆕 NEW ROWS */}
+            {newRows.map((row) => (
+              <tr key={row._tempId} className="editing-row">
+                <td>New</td>
+                <td><input className="cell-input" value={row.infraPhase} onChange={(e) => updateNewRow(row._tempId, "infraPhase", e.target.value)} /></td>
+                <td><input className="cell-input" value={row.taskName} onChange={(e) => updateNewRow(row._tempId, "taskName", e.target.value)} /></td>
+                <td>
+                  <select className="cell-input" value={row.status} onChange={(e) => updateNewRow(row._tempId, "status", e.target.value)}>
+                    <option>Planned</option>
+                    <option>WIP</option>
+                    <option>Blocked</option>
+                    <option>Completed</option>
+                  </select>
+                </td>
+                <td><input type="number" className="cell-input" value={row.percentComplete} onChange={(e) => updateNewRow(row._tempId, "percentComplete", Number(e.target.value))} /></td>
+                <td><input type="date" className="cell-input" value={row.startDate} onChange={(e) => updateNewRow(row._tempId, "startDate", e.target.value)} /></td>
+                <td><input type="date" className="cell-input" value={row.endDate} onChange={(e) => updateNewRow(row._tempId, "endDate", e.target.value)} /></td>
+                <td><input className="cell-input" value={row.owner} onChange={(e) => updateNewRow(row._tempId, "owner", e.target.value)} /></td>
+                <td>
+                  <button className="btn-primary btn-xs" onClick={() => saveNewRow(row)}>Save</button>
+                  <button className="btn-secondary btn-xs" onClick={() => cancelNewRow(row._tempId)}>Cancel</button>
+                </td>
+              </tr>
+            ))}
+
+            {/* EXISTING ROWS */}
             {pageData.map((task, index) => {
               const isEditing = editRowId === task.id;
 
               return (
-                <tr key={task.id}>
+                <tr key={task.id} className={isEditing ? "editing-row" : ""}>
                   <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
 
-                  <td>
-                    {isEditing ? (
-                      <input
-                        className="cell-input"
-                        value={editData.infraPhase || ""}
-                        onChange={(e) =>
-                          handleEditChange("infraPhase", e.target.value)
-                        }
-                      />
-                    ) : (
-                      task.infraPhase
-                    )}
-                  </td>
+                  <td>{isEditing ? (
+                    <input className="cell-input" value={editData.infraPhase || ""} onChange={(e) => handleEditChange("infraPhase", e.target.value)} />
+                  ) : task.infraPhase}</td>
 
-                  <td>
-                    {isEditing ? (
-                      <input
-                        className="cell-input"
-                        value={editData.taskName || ""}
-                        onChange={(e) =>
-                          handleEditChange("taskName", e.target.value)
-                        }
-                      />
-                    ) : (
-                      task.taskName
-                    )}
-                  </td>
+                  <td>{isEditing ? (
+                    <input className="cell-input" value={editData.taskName || ""} onChange={(e) => handleEditChange("taskName", e.target.value)} />
+                  ) : task.taskName}</td>
 
-                  <td>
-                    {isEditing ? (
-                      <select
-                        className="cell-input"
-                        value={editData.status || ""}
-                        onChange={(e) =>
-                          handleEditChange("status", e.target.value)
-                        }
-                      >
-                        <option>Planned</option>
-                        <option>WIP</option>
-                        <option>Blocked</option>
-                        <option>Completed</option>
-                      </select>
-                    ) : (
-                      task.status
-                    )}
-                  </td>
+                  <td>{isEditing ? (
+                    <select className="cell-input" value={editData.status || ""} onChange={(e) => handleEditChange("status", e.target.value)}>
+                      <option>Planned</option>
+                      <option>WIP</option>
+                      <option>Blocked</option>
+                      <option>Completed</option>
+                    </select>
+                  ) : task.status}</td>
 
-                  <td>
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        className="cell-input"
-                        value={editData.percentComplete ?? ""}
-                        onChange={(e) =>
-                          handleEditChange(
-                            "percentComplete",
-                            Number(e.target.value)
-                          )
-                        }
-                      />
-                    ) : (
-                      `${task.percentComplete}%`
-                    )}
-                  </td>
+                  <td>{isEditing ? (
+                    <input type="number" className="cell-input" value={editData.percentComplete ?? ""} onChange={(e) => handleEditChange("percentComplete", Number(e.target.value))} />
+                  ) : `${task.percentComplete}%`}</td>
 
-                  <td>
-                    {isEditing ? (
-                      <input
-                        type="date"
-                        className="cell-input"
-                        value={formatDate(editData.startDate)}
-                        onChange={(e) =>
-                          handleEditChange("startDate", e.target.value)
-                        }
-                      />
-                    ) : (
-                      formatDate(task.startDate)
-                    )}
-                  </td>
+                  <td>{isEditing ? (
+                    <input type="date" className="cell-input" value={formatDate(editData.startDate)} onChange={(e) => handleEditChange("startDate", e.target.value)} />
+                  ) : formatDate(task.startDate)}</td>
 
-                  <td>
-                    {isEditing ? (
-                      <input
-                        type="date"
-                        className="cell-input"
-                        value={formatDate(editData.endDate)}
-                        onChange={(e) =>
-                          handleEditChange("endDate", e.target.value)
-                        }
-                      />
-                    ) : (
-                      formatDate(task.endDate)
-                    )}
-                  </td>
+                  <td>{isEditing ? (
+                    <input type="date" className="cell-input" value={formatDate(editData.endDate)} onChange={(e) => handleEditChange("endDate", e.target.value)} />
+                  ) : formatDate(task.endDate)}</td>
 
-                  <td>
-                    {isEditing ? (
-                      <input
-                        className="cell-input"
-                        value={editData.owner || ""}
-                        onChange={(e) =>
-                          handleEditChange("owner", e.target.value)
-                        }
-                      />
-                    ) : (
-                      task.owner
-                    )}
-                  </td>
+                  <td>{isEditing ? (
+                    <input className="cell-input" value={editData.owner || ""} onChange={(e) => handleEditChange("owner", e.target.value)} />
+                  ) : task.owner}</td>
 
                   <td>
                     {isEditing ? (
                       <>
-                        <button
-                          className="btn-primary btn-xs"
-                          onClick={saveEdit}
-                        >
-                          Save
-                        </button>
-                        <button
-                          className="btn-secondary btn-xs"
-                          onClick={cancelEdit}
-                        >
-                          Cancel
-                        </button>
+                        <button className="btn-primary btn-xs" onClick={saveEdit}>Save</button>
+                        <button className="btn-secondary btn-xs" onClick={cancelEdit}>Cancel</button>
                       </>
                     ) : (
-                      <button
-                        className="btn-outline btn-xs"
-                        onClick={() => startEdit(task)}
-                      >
-                        Edit
-                      </button>
+                      <button className="btn-outline btn-xs" onClick={() => startEdit(task)}>Edit</button>
                     )}
                   </td>
                 </tr>
@@ -409,18 +419,9 @@ export default function InfraTracker() {
 
       {/* Pagination */}
       <div className="pagination-bar">
-        <button disabled={page === 1} onClick={() => setPage(page - 1)}>
-          ◀
-        </button>
-        <span>
-          Page {page} of {totalPages}
-        </span>
-        <button
-          disabled={page === totalPages}
-          onClick={() => setPage(page + 1)}
-        >
-          ▶
-        </button>
+        <button disabled={page === 1} onClick={() => setPage(page - 1)}>◀</button>
+        <span>Page {page} of {totalPages}</span>
+        <button disabled={page === totalPages} onClick={() => setPage(page + 1)}>▶</button>
       </div>
     </div>
   );
