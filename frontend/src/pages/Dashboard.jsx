@@ -137,11 +137,11 @@ function Dashboard() {
         const leadDays = daysFromToday(t.endDate);
 
         return (
-          t.status === "WIP" &&
+          t.status === "Closed" &&
           p > 60 &&
-          leadDays !== null &&
-          leadDays >= 7 &&
-          leadDays <= 10
+          leadDays !== null ||
+          leadDays >= 3 &&
+          leadDays <= 30
         );
       }),
     },
