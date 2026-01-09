@@ -219,7 +219,7 @@ export default function Tracker() {
       <div className="action-bar">
         <div className="left-actions">
           <ExcelReplaceUpload
-            endpoint="http://localhost:4000/excel/replace"
+            endpoint={`${API_BASE_URL}/excel/replace`}
             confirmText="This will completely replace ALL Program Tracker data. Continue?"
             onSuccess={loadTasks}
           />

@@ -221,7 +221,7 @@ export default function InfraTracker() {
         {/* LEFT SIDE */}
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           <ExcelReplaceUpload
-            endpoint="http://localhost:4000/excel/infra-replace"
+            endpoint={`${API_BASE_URL}/excel/infra-replace`}
             confirmText="This will completely replace ALL Infra Setup data. Continue?"
             onSuccess={() => {
               loadTasks();
