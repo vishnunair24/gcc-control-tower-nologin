@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../config";
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -52,7 +53,7 @@ export default function InfraTracker() {
   // Load Infra Tasks
   // =========================
   const loadTasks = async () => {
-    const res = await axios.get("http://localhost:4000/infra-tasks");
+    const res = await axios.get(`${API_BASE_URL}/infra-tasks`);
     setTasks(res.data || []);
   };
 
@@ -114,7 +115,7 @@ export default function InfraTracker() {
 
   const saveEdit = async () => {
     await axios.put(
-      `http://localhost:4000/infra-tasks/${editRowId}`,
+      `${API_BASE_URL}/infra-tasks/${editRowId}`,
       editData
     );
     setEditRowId(null);
@@ -151,7 +152,7 @@ export default function InfraTracker() {
     const payload = normalizePayload(row);
     delete payload._tempId;
 
-    await axios.post("http://localhost:4000/infra-tasks", payload);
+    await axios.post(`${API_BASE_URL}/infra-tasks`, payload);
 
     setNewRows((prev) => prev.filter((r) => r._tempId !== row._tempId));
     loadTasks();
@@ -161,7 +162,7 @@ export default function InfraTracker() {
     for (const row of newRows) {
       const payload = normalizePayload(row);
       delete payload._tempId;
-      await axios.post("http://localhost:4000/infra-tasks", payload);
+      await axios.post(`${API_BASE_URL}/infra-tasks`, payload);
     }
     setNewRows([]);
     loadTasks();

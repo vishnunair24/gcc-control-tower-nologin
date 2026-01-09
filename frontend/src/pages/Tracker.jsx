@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../config";
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -57,7 +58,7 @@ export default function Tracker() {
   // Load data
   // =========================
   const loadTasks = async () => {
-    const res = await axios.get("http://localhost:4000/tasks");
+    const res = await axios.get(`${API_BASE_URL}/tasks`);
     setTasks(res.data || []);
   };
 
@@ -124,7 +125,7 @@ export default function Tracker() {
 
   const saveEdit = async () => {
     await axios.put(
-      `http://localhost:4000/tasks/${editRowId}`,
+      `${API_BASE_URL}/tasks/${editRowId}`,
       editData
     );
     setEditRowId(null);
@@ -161,7 +162,7 @@ export default function Tracker() {
     const payload = normalizePayload(row);
     delete payload._tempId;
 
-    await axios.post("http://localhost:4000/tasks", payload);
+    await axios.post(`${API_BASE_URL}/tasks`, payload);
     setNewRows((prev) => prev.filter((r) => r._tempId !== row._tempId));
     loadTasks();
   };
@@ -170,7 +171,7 @@ export default function Tracker() {
     for (const row of newRows) {
       const payload = normalizePayload(row);
       delete payload._tempId;
-      await axios.post("http://localhost:4000/tasks", payload);
+      await axios.post(`${API_BASE_URL}/tasks`, payload);
     }
     setNewRows([]);
     loadTasks();
