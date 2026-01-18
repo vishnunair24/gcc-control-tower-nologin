@@ -9,6 +9,9 @@ import "./Tracker.css";
 
 const PAGE_SIZE = 15;
 
+const generateTempId = () =>
+  `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
 const formatDate = (date) =>
   date
     ? new Date(date).toLocaleDateString("en-GB", {
@@ -22,7 +25,7 @@ const formatDate = (date) =>
    helper for new rows
 ========================= */
 const createEmptyNewRow = () => ({
-  _tempId: crypto.randomUUID(),
+  _tempId: generateTempId(),
   workstream: "",
   deliverable: "",
   status: "WIP",

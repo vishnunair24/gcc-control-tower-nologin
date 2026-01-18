@@ -9,6 +9,9 @@ import "./InfraTracker.css";
 
 const PAGE_SIZE = 15;
 
+const generateTempId = () =>
+  `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
 const formatDate = (date) =>
   date ? new Date(date).toISOString().slice(0, 10) : "";
 
@@ -16,7 +19,7 @@ const formatDate = (date) =>
    🆕 helper for new rows
 ========================= */
 const createEmptyNewRow = () => ({
-  _tempId: crypto.randomUUID(),
+  _tempId: generateTempId(),
   infraPhase: "",
   taskName: "",
   status: "Planned",

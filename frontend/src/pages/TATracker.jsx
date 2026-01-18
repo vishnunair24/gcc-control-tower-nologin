@@ -5,8 +5,11 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import "./Tracker.css";
 
+const generateTempId = () =>
+  `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
 const createEmptyNewRequisition = () => ({
-  _tempId: crypto.randomUUID(),
+  _tempId: generateTempId(),
   requisitionId: "",
   jobTitle: "",
   hiringManager: "",
@@ -17,7 +20,7 @@ const createEmptyNewRequisition = () => ({
 });
 
 const createEmptyNewCandidate = () => ({
-  _tempId: crypto.randomUUID(),
+  _tempId: generateTempId(),
   requisitionId: "",
   candidateName: "",
   recruiter: "",
@@ -26,7 +29,7 @@ const createEmptyNewCandidate = () => ({
 });
 
 const createEmptyNewInterview = () => ({
-  _tempId: crypto.randomUUID(),
+  _tempId: generateTempId(),
   requisitionId: "",
   candidateId: "",
   interviewRound: "",
@@ -36,7 +39,7 @@ const createEmptyNewInterview = () => ({
 });
 
 const createEmptyNewOffer = () => ({
-  _tempId: crypto.randomUUID(),
+  _tempId: generateTempId(),
   requisitionId: "",
   candidateId: "",
   offerReleasedDate: "",
@@ -47,7 +50,7 @@ const createEmptyNewOffer = () => ({
 });
 
 const createEmptyNewJoiner = () => ({
-  _tempId: crypto.randomUUID(),
+  _tempId: generateTempId(),
   requisitionId: "",
   candidateId: "",
   joiningDate: "",
