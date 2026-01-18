@@ -58,7 +58,7 @@ export default function Tracker() {
   // Load data
   // =========================
   const loadTasks = async () => {
-    const res = await axios.get("http://localhost:3001/tasks");
+    const res = await axios.get(`${API_BASE_URL}/tasks`);
     setTasks(res.data || []);
   };
 
@@ -124,10 +124,7 @@ export default function Tracker() {
   };
 
   const saveEdit = async () => {
-    await axios.put(
-      `http://localhost:3001/tasks/${editRowId}`,
-      editData
-    );
+    await axios.put(`${API_BASE_URL}/tasks/${editRowId}`, editData);
     setEditRowId(null);
     setEditData({});
     loadTasks();
@@ -162,7 +159,7 @@ export default function Tracker() {
     const payload = normalizePayload(row);
     delete payload._tempId;
 
-    await axios.post("http://localhost:3001/tasks", payload);
+    await axios.post(`${API_BASE_URL}/tasks`, payload);
     setNewRows((prev) => prev.filter((r) => r._tempId !== row._tempId));
     loadTasks();
   };
@@ -171,7 +168,7 @@ export default function Tracker() {
     for (const row of newRows) {
       const payload = normalizePayload(row);
       delete payload._tempId;
-      await axios.post("http://localhost:3001/tasks", payload);
+      await axios.post(`${API_BASE_URL}/tasks`, payload);
     }
     setNewRows([]);
     loadTasks();
@@ -219,7 +216,7 @@ export default function Tracker() {
       <div className="action-bar">
         <div className="left-actions">
           <ExcelReplaceUpload
-            endpoint={"http://localhost:3001/excel/replace"}
+            endpoint={`${API_BASE_URL}/excel/replace`}
             confirmText="This will completely replace ALL Program Tracker data. Continue?"
             onSuccess={loadTasks}
           />

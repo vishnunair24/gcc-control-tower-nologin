@@ -60,7 +60,7 @@ function Dashboard() {
   }, []);
 
   const fetchTasks = async () => {
-    const res = await axios.get("http://localhost:3001/tasks");
+    const res = await axios.get(`${API_BASE_URL}/tasks`);
     setTasks(res.data);
   };
 

@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gcc_control_tower}
+      POSTGRES_USER: ${POSTGRES_USER:-gcc_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gcc_password}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-gcc_user}:${POSTGRES_PASSWORD:-gcc_password}@db:5432/${POSTGRES_DB:-gcc_control_tower}?schema=public}
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Frontend will call backend via /api which Nginx proxies
+        VITE_API_BASE_URL: "/api"
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local
