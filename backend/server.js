@@ -5,6 +5,7 @@ const PORT = process.env.PORT || 3001;
 const taskRoutes = require("./routes/taskRoutes");
 const infraTaskRoutes = require("./routes/infraTaskRoutes");
 const excelUploadRoutes = require("./routes/excelUploadRoutes");
+const taRoutes = require("./routes/taRoutes");
 
 const app = express();
 
@@ -24,6 +25,9 @@ app.use("/infra-tasks", infraTaskRoutes);
 
 // Excel Uploads (Program + Infra)
 app.use("/excel", excelUploadRoutes);
+
+// TA Dashboard + Tracker
+app.use("/ta", taRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

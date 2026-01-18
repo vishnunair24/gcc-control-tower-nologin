@@ -6,6 +6,8 @@ import Tracker from "./pages/Tracker";
 import ProgramIntelligence from "./pages/ProgramIntelligence";
 import InfraTracker from "./pages/InfraTracker";
 import InfraIntelligence from "./pages/InfraIntelligence";
+import TADashboard from "./pages/TADashboard";
+import TATracker from "./pages/TATracker";
 
 import summitLogo from "./assets/summit-logo.png";
 
@@ -67,6 +69,10 @@ function App() {
               path="/program-intelligence"
               element={<ProgramIntelligence />}
             />
+
+            {/* TA views (UI only, no change to existing logic) */}
+            <Route path="/ta-dashboard" element={<TADashboard />} />
+            <Route path="/ta-tracker" element={<TATracker />} />
 
             {/* 🆕 INFRA INTELLIGENCE (APPENDED ONLY) */}
             <Route

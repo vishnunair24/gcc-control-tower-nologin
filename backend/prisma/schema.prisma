@@ -51,3 +51,120 @@ model InfraTask {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+// ==============================
+// TA DATA MODEL (NEW)
+// ==============================
+
+// Requisition-level view (demand, status)
+model TARequisition {
+  id                     Int      @id @default(autoincrement())
+  requisitionId          String   // Business key from Excel (Job ID)
+  jobTitle               String
+  technology             String?
+  hiringManager          String?
+  recruiter              String?
+  approvedPositions      Int      @default(0)
+  priority               String?
+  requisitionStatus      String   // Open / On Hold / Cancelled / Closed etc.
+  requisitionCreatedDate DateTime?
+  targetClosureDate      DateTime?
+  location               String?
+  businessUnit           String?
+
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+// Candidate-level view (per requisition)
+model TACandidate {
+  id                 Int      @id @default(autoincrement())
+  candidateId        String   // Business key from Excel
+  requisitionId      String   // Links back to TARequisition.requisitionId (no FK enforced)
+  candidateName      String
+  recruiter          String?
+  source             String?
+  profileReceivedDate DateTime?
+  profileStatus      String?
+  currentStage       String?
+  stageEntryDate     DateTime?
+  candidateStatus    String?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+// Interview events and TAT
+model TAInterview {
+  id             Int      @id @default(autoincrement())
+  interviewId    String?  // Optional business key
+  candidateId    String
+  requisitionId  String
+  interviewRound String?
+  interviewDate  DateTime?
+  feedbackDate   DateTime?
+  interviewResult String?
+  interviewer    String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// Offer lifecycle
+model TAOffer {
+  id                Int      @id @default(autoincrement())
+  offerId           String?  // Optional business key
+  candidateId       String
+  requisitionId     String
+  offerReleasedDate DateTime?
+  offerStatus       String?  // Accepted / Pending / Declined
+  offerAcceptedDate DateTime?
+  expectedDoj       DateTime?
+  actualDoj         DateTime?
+  declineReason     String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// Joiner pipeline
+model TAJoiner {
+  id             Int      @id @default(autoincrement())
+  joinerId       String?  // Optional business key
+  candidateId    String
+  requisitionId  String
+  joiningDate    DateTime?
+  joiningStatus  String?  // Joined / No Show
+  onboardingStatus String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// Monthly aggregate snapshot for TA exec dashboard
+model TAExecMonthly {
+  id               Int    @id @default(autoincrement())
+  snapshotMonth    String // e.g. "Jan-2026"
+  technology       String?
+  totalApproved    Int    @default(0)
+  joined           Int    @default(0)
+  offersAccepted   Int    @default(0)
+  offersInProcess  Int    @default(0)
+  offersDeclined   Int    @default(0)
+  openActive       Int    @default(0)
+  onHold           Int    @default(0)
+  cancelled        Int    @default(0)
+}
+
+// Monthly recruiter productivity snapshot
+model TARecruiterMonthly {
+  id                 Int    @id @default(autoincrement())
+  snapshotMonth      String // e.g. "Jan-2026"
+  recruiter          String
+  positionsAssigned  Int    @default(0)
+  profilesSubmitted  Int    @default(0)
+  interviewsScheduled Int   @default(0)
+  offersReleased     Int    @default(0)
+  joiners            Int    @default(0)
+  avgTatDays         Float  @default(0)
+}

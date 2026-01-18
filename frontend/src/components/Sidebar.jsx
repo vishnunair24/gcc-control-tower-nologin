@@ -17,6 +17,14 @@ function Sidebar() {
         <Link to="/program-intelligence" className="block hover:text-gray-300">
           Program Intelligence
         </Link>
+
+        <Link to="/ta-dashboard" className="block hover:text-gray-300">
+          TA Dashboard
+        </Link>
+
+        <Link to="/ta-tracker" className="block hover:text-gray-300">
+          TA Tracker
+        </Link>
       </nav>
     </aside>
   );

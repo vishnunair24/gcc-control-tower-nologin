@@ -11,6 +11,9 @@ const {
   replaceInfraFromExcel,
 } = require("../controllers/infraExcelController");
 
+// TA Tracker Excel controller (NEW)
+const { replaceTAFromExcel } = require("../controllers/taExcelController");
+
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -36,6 +39,20 @@ router.post(
   "/infra-replace",
   upload.single("file"),
   replaceInfraFromExcel
+);
+
+/**
+ * ============================
+ * TA TRACKER EXCEL REPLACE
+ * ============================
+ * Endpoint:
+ * POST /excel/ta-replace
+ * Writes to: TA* tables
+ */
+router.post(
+  "/ta-replace",
+  upload.single("file"),
+  replaceTAFromExcel
 );
 
 module.exports = router;
