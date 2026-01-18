@@ -18,6 +18,20 @@ router.get("/", getTasks);
 // Update task (edit from tracker)
 router.put("/:id", updateTask);
 
+// Delete task
+router.delete("/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    await prisma.task.delete({ where: { id } });
+
+    res.status(204).send();
+  } catch (err) {
+    console.error("❌ Delete task failed:", err);
+    res.status(500).json({ error: "Failed to delete task" });
+  }
+});
+
 /* =======================
    CREATE TASK (ADD ROW)
    ======================= */

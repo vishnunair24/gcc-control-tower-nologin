@@ -120,6 +120,12 @@ export default function InfraTracker() {
     loadTasks();
   };
 
+  const deleteRow = async (id) => {
+    if (!window.confirm("Delete this task from Infra Tracker?")) return;
+    await axios.delete(`${API_BASE_URL}/infra-tasks/${id}`);
+    loadTasks();
+  };
+
   /* =========================
      🆕 NEW ROW HANDLERS
   ========================= */
@@ -405,7 +411,17 @@ export default function InfraTracker() {
                         <button className="btn-secondary btn-xs" onClick={cancelEdit}>Cancel</button>
                       </>
                     ) : (
-                      <button className="btn-outline btn-xs" onClick={() => startEdit(task)}>Edit</button>
+                      <>
+                        <button className="btn-outline btn-xs" onClick={() => startEdit(task)}>Edit</button>
+                        <button
+                          className="btn-secondary btn-xs"
+                          style={{ marginLeft: 4, paddingInline: 6 }}
+                          onClick={() => deleteRow(task.id)}
+                          title="Delete row"
+                        >
+                          -
+                        </button>
+                      </>
                     )}
                   </td>
                 </tr>

@@ -130,6 +130,12 @@ export default function Tracker() {
     loadTasks();
   };
 
+  const deleteRow = async (id) => {
+    if (!window.confirm("Delete this task from Program Tracker?")) return;
+    await axios.delete(`${API_BASE_URL}/tasks/${id}`);
+    loadTasks();
+  };
+
   // =========================
   // New row logic
   // =========================
@@ -414,7 +420,17 @@ export default function Tracker() {
                         <button className="btn-secondary btn-xs" onClick={cancelEdit}>Cancel</button>
                       </>
                     ) : (
-                      <button className="btn-outline btn-xs" onClick={() => startEdit(task)}>Edit</button>
+                      <>
+                        <button className="btn-outline btn-xs" onClick={() => startEdit(task)}>Edit</button>
+                        <button
+                          className="btn-secondary btn-xs"
+                          style={{ marginLeft: 4, paddingInline: 6 }}
+                          onClick={() => deleteRow(task.id)}
+                          title="Delete row"
+                        >
+                          -
+                        </button>
+                      </>
                     )}
                   </td>
                 </tr>

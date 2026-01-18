@@ -98,4 +98,20 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+/* =====================================================
+   DELETE INFRA TASK
+===================================================== */
+router.delete("/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    await prisma.infraTask.delete({ where: { id } });
+
+    res.status(204).send();
+  } catch (error) {
+    console.error("❌ Delete infra task failed:", error);
+    res.status(500).json({ error: "Failed to delete infra task" });
+  }
+});
+
 module.exports = router;

@@ -225,4 +225,324 @@ router.get("/tracker", async (req, res) => {
   }
 });
 
+// =============================
+// TA REQUISITION INLINE EDITING
+// =============================
+
+router.post("/requisitions", async (req, res) => {
+  try {
+    const data = req.body || {};
+    const created = await prisma.tARequisition.create({
+      data: {
+        requisitionId: data.requisitionId || "",
+        jobTitle: data.jobTitle || "",
+        hiringManager: data.hiringManager || null,
+        technology: data.technology || null,
+        approvedPositions: Number(data.approvedPositions) || 0,
+        priority: data.priority || null,
+        requisitionStatus: data.requisitionStatus || "Open",
+      },
+    });
+    res.json(created);
+  } catch (err) {
+    console.error("TA requisition create failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put("/requisitions/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) {
+      return res.status(400).json({ error: "Invalid requisition id" });
+    }
+
+    const data = req.body || {};
+    const updated = await prisma.tARequisition.update({
+      where: { id },
+      data: {
+        requisitionId: data.requisitionId || undefined,
+        jobTitle: data.jobTitle || undefined,
+        hiringManager: data.hiringManager ?? undefined,
+        technology: data.technology ?? undefined,
+        approvedPositions:
+          data.approvedPositions !== undefined
+            ? Number(data.approvedPositions) || 0
+            : undefined,
+        priority: data.priority ?? undefined,
+        requisitionStatus: data.requisitionStatus || undefined,
+      },
+    });
+
+    res.json(updated);
+  } catch (err) {
+    console.error("TA requisition update failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete("/requisitions/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ error: "Invalid requisition id" });
+
+    await prisma.tARequisition.delete({ where: { id } });
+    res.status(204).send();
+  } catch (err) {
+    console.error("TA requisition delete failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =============================
+// TA CANDIDATES
+// =============================
+
+router.post("/candidates", async (req, res) => {
+  try {
+    const data = req.body || {};
+    const created = await prisma.tACandidate.create({
+      data: {
+        candidateId:
+          data.candidateId || `${data.requisitionId || ""}-${data.candidateName || ""}`,
+        requisitionId: data.requisitionId || "",
+        candidateName: data.candidateName || "",
+        recruiter: data.recruiter || null,
+        source: data.source || null,
+        profileStatus: data.profileStatus || null,
+        currentStage: data.currentStage || null,
+        candidateStatus: data.candidateStatus || null,
+      },
+    });
+    res.json(created);
+  } catch (err) {
+    console.error("TA candidate create failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put("/candidates/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ error: "Invalid candidate id" });
+
+    const data = req.body || {};
+    const updated = await prisma.tACandidate.update({
+      where: { id },
+      data: {
+        candidateId: data.candidateId || undefined,
+        requisitionId: data.requisitionId || undefined,
+        candidateName: data.candidateName || undefined,
+        recruiter: data.recruiter ?? undefined,
+        source: data.source ?? undefined,
+        profileStatus: data.profileStatus ?? undefined,
+        currentStage: data.currentStage ?? undefined,
+        candidateStatus: data.candidateStatus ?? undefined,
+      },
+    });
+    res.json(updated);
+  } catch (err) {
+    console.error("TA candidate update failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete("/candidates/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ error: "Invalid candidate id" });
+
+    await prisma.tACandidate.delete({ where: { id } });
+    res.status(204).send();
+  } catch (err) {
+    console.error("TA candidate delete failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =============================
+// TA INTERVIEWS
+// =============================
+
+router.post("/interviews", async (req, res) => {
+  try {
+    const data = req.body || {};
+    const created = await prisma.tAInterview.create({
+      data: {
+        candidateId: data.candidateId || "",
+        requisitionId: data.requisitionId || "",
+        interviewRound: data.interviewRound || null,
+        interviewDate: data.interviewDate || null,
+        feedbackDate: data.feedbackDate || null,
+        interviewResult: data.interviewResult || null,
+        interviewer: data.interviewer || null,
+      },
+    });
+    res.json(created);
+  } catch (err) {
+    console.error("TA interview create failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put("/interviews/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ error: "Invalid interview id" });
+
+    const data = req.body || {};
+    const updated = await prisma.tAInterview.update({
+      where: { id },
+      data: {
+        candidateId: data.candidateId || undefined,
+        requisitionId: data.requisitionId || undefined,
+        interviewRound: data.interviewRound ?? undefined,
+        interviewDate: data.interviewDate ?? undefined,
+        feedbackDate: data.feedbackDate ?? undefined,
+        interviewResult: data.interviewResult ?? undefined,
+        interviewer: data.interviewer ?? undefined,
+      },
+    });
+    res.json(updated);
+  } catch (err) {
+    console.error("TA interview update failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete("/interviews/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ error: "Invalid interview id" });
+
+    await prisma.tAInterview.delete({ where: { id } });
+    res.status(204).send();
+  } catch (err) {
+    console.error("TA interview delete failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =============================
+// TA OFFERS
+// =============================
+
+router.post("/offers", async (req, res) => {
+  try {
+    const data = req.body || {};
+    const created = await prisma.tAOffer.create({
+      data: {
+        candidateId: data.candidateId || "",
+        requisitionId: data.requisitionId || "",
+        offerStatus: data.offerStatus || null,
+        offerReleasedDate: data.offerReleasedDate || null,
+        expectedDoj: data.expectedDoj || null,
+        actualDoj: data.actualDoj || null,
+        declineReason: data.declineReason || null,
+      },
+    });
+    res.json(created);
+  } catch (err) {
+    console.error("TA offer create failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put("/offers/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ error: "Invalid offer id" });
+
+    const data = req.body || {};
+    const updated = await prisma.tAOffer.update({
+      where: { id },
+      data: {
+        candidateId: data.candidateId || undefined,
+        requisitionId: data.requisitionId || undefined,
+        offerStatus: data.offerStatus ?? undefined,
+        offerReleasedDate: data.offerReleasedDate ?? undefined,
+        expectedDoj: data.expectedDoj ?? undefined,
+        actualDoj: data.actualDoj ?? undefined,
+        declineReason: data.declineReason ?? undefined,
+      },
+    });
+    res.json(updated);
+  } catch (err) {
+    console.error("TA offer update failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete("/offers/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ error: "Invalid offer id" });
+
+    await prisma.tAOffer.delete({ where: { id } });
+    res.status(204).send();
+  } catch (err) {
+    console.error("TA offer delete failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =============================
+// TA JOINERS
+// =============================
+
+router.post("/joiners", async (req, res) => {
+  try {
+    const data = req.body || {};
+    const created = await prisma.tAJoiner.create({
+      data: {
+        candidateId: data.candidateId || "",
+        requisitionId: data.requisitionId || "",
+        joiningDate: data.joiningDate || null,
+        joiningStatus: data.joiningStatus || null,
+        onboardingStatus: data.onboardingStatus || null,
+      },
+    });
+    res.json(created);
+  } catch (err) {
+    console.error("TA joiner create failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put("/joiners/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ error: "Invalid joiner id" });
+
+    const data = req.body || {};
+    const updated = await prisma.tAJoiner.update({
+      where: { id },
+      data: {
+        candidateId: data.candidateId || undefined,
+        requisitionId: data.requisitionId || undefined,
+        joiningDate: data.joiningDate ?? undefined,
+        joiningStatus: data.joiningStatus ?? undefined,
+        onboardingStatus: data.onboardingStatus ?? undefined,
+      },
+    });
+    res.json(updated);
+  } catch (err) {
+    console.error("TA joiner update failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete("/joiners/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ error: "Invalid joiner id" });
+
+    await prisma.tAJoiner.delete({ where: { id } });
+    res.status(204).send();
+  } catch (err) {
+    console.error("TA joiner delete failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
