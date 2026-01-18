@@ -1,8 +1,13 @@
 # Backend Dockerfile
-# Multi-stage to keep runtime image small
+# Multi-stage to keep runtime image small and Prisma-compatible
 
-FROM node:20-alpine AS base
+FROM node:20-bullseye-slim AS base
 WORKDIR /app
+
+# Install system dependencies needed by Prisma (OpenSSL)
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends openssl \
+	&& rm -rf /var/lib/apt/lists/*
 
 # Install dependencies
 COPY package.json package-lock.json* ./
@@ -15,8 +20,13 @@ COPY . .
 RUN npx prisma generate
 
 # Runtime image
-FROM node:20-alpine AS runtime
+FROM node:20-bullseye-slim AS runtime
 WORKDIR /app
+
+# Install system dependencies needed by Prisma (OpenSSL)
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends openssl \
+	&& rm -rf /var/lib/apt/lists/*
 
 # Copy installed node_modules and app source
 COPY --from=base /app/node_modules ./node_modules
