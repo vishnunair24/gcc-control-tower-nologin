@@ -229,14 +229,6 @@ export default function Tracker() {
           <button className="btn-outline btn-xs" onClick={exportToExcel}>
             Download Excel
           </button>
-          <button className="btn-primary btn-xs" onClick={addNewRow}>
-            + Add Row
-          </button>
-          {newRows.length > 0 && (
-            <button className="btn-primary btn-xs" onClick={saveAllNewRows}>
-              Save All New Rows
-            </button>
-          )}
         </div>
 
         <button
@@ -316,6 +308,29 @@ export default function Tracker() {
         >
           Clear
         </button>
+      </div>
+
+      {/* ROW ACTIONS (PER TABLE, TOP-RIGHT) */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          margin: "4px 0",
+          gap: "6px",
+        }}
+      >
+        <button
+          className="btn-primary btn-xs"
+          style={{ background: "#16a34a", borderColor: "#16a34a" }}
+          onClick={addNewRow}
+        >
+          + Add Row
+        </button>
+        {newRows.length > 0 && (
+          <button className="btn-primary btn-xs" onClick={saveAllNewRows}>
+            Save All New Rows
+          </button>
+        )}
       </div>
 
       {/* TABLE */}
@@ -423,7 +438,7 @@ export default function Tracker() {
                       <>
                         <button className="btn-outline btn-xs" onClick={() => startEdit(task)}>Edit</button>
                         <button
-                          className="btn-secondary btn-xs"
+                          className="btn-danger btn-xs"
                           style={{ marginLeft: 4, paddingInline: 6 }}
                           onClick={() => deleteRow(task.id)}
                           title="Delete row"

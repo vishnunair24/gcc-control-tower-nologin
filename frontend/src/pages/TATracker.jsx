@@ -753,7 +753,7 @@ function TATracker() {
         <p className="subtitle">Operational TA pipeline and offer tracking</p>
       </div>
 
-      {/* ACTION BAR - mirrors existing tracker/infratracker */}
+      {/* ACTION BAR - Excel controls only */}
       <div className="action-bar">
         <div className="left-actions">
           <ExcelReplaceUpload
@@ -769,16 +769,6 @@ function TATracker() {
           <button className="btn-outline btn-xs" onClick={downloadTemplate}>
             Download Excel
           </button>
-
-          <button className="btn-primary btn-xs" onClick={addNewRow}>
-            + Add Row
-          </button>
-
-          {newRows.length > 0 && (
-            <button className="btn-primary btn-xs" onClick={saveAllNewRows}>
-              Save All New Rows
-            </button>
-          )}
         </div>
 
         {/* Right side kept free for future navigation if needed */}
@@ -843,7 +833,7 @@ function TATracker() {
       </div>
 
       {/* OPEN REQUISITION TRACKER */}
-      <SectionCard title="Open Requisition Tracker">
+      <SectionCard title="Open Requisition Tracker" onAddRow={addNewRow}>
         <div className="ta-table-container">
           <table className="ta-table">
             <thead>
@@ -1071,7 +1061,7 @@ function TATracker() {
                           Edit
                         </button>
                         <button
-                          className="btn-secondary btn-xs"
+                          className="btn-danger btn-xs"
                           style={{ marginLeft: 4, paddingInline: 6 }}
                           onClick={() => deleteRequisition(r.id)}
                           title="Delete row"
@@ -1097,7 +1087,10 @@ function TATracker() {
       </SectionCard>
 
       {/* CANDIDATE STAGE TRACKER */}
-      <SectionCard title="Candidate Pipeline (TA View)">
+      <SectionCard
+        title="Candidate Pipeline (TA View)"
+        onAddRow={addNewCandidate}
+      >
         <div className="ta-table-container">
           <table className="ta-table">
             <thead>
@@ -1257,7 +1250,7 @@ function TATracker() {
                           Edit
                         </button>
                         <button
-                          className="btn-secondary btn-xs"
+                          className="btn-danger btn-xs"
                           style={{ marginLeft: 4, paddingInline: 6 }}
                           onClick={() => deleteCandidate(c.id)}
                           title="Delete row"
@@ -1283,7 +1276,10 @@ function TATracker() {
       </SectionCard>
 
       {/* INTERVIEW & FEEDBACK TAT */}
-      <SectionCard title="Interview Turnaround Tracking">
+      <SectionCard
+        title="Interview Turnaround Tracking"
+        onAddRow={addNewInterview}
+      >
         <div className="ta-table-container">
           <table className="ta-table">
             <thead>
@@ -1487,7 +1483,7 @@ function TATracker() {
                           Edit
                         </button>
                         <button
-                          className="btn-secondary btn-xs"
+                          className="btn-danger btn-xs"
                           style={{ marginLeft: 4, paddingInline: 6 }}
                           onClick={() => deleteInterview(i.id)}
                           title="Delete row"
@@ -1513,7 +1509,7 @@ function TATracker() {
       </SectionCard>
 
       {/* OFFER MANAGEMENT */}
-      <SectionCard title="Offer Lifecycle">
+      <SectionCard title="Offer Lifecycle" onAddRow={addNewOffer}>
         <div className="ta-table-container">
           <table className="ta-table">
             <thead>
@@ -1751,7 +1747,7 @@ function TATracker() {
                           Edit
                         </button>
                         <button
-                          className="btn-secondary btn-xs"
+                          className="btn-danger btn-xs"
                           style={{ marginLeft: 4, paddingInline: 6 }}
                           onClick={() => deleteOffer(o.id)}
                           title="Delete row"
@@ -1777,7 +1773,10 @@ function TATracker() {
       </SectionCard>
 
       {/* JOINER PIPELINE */}
-      <SectionCard title="Joiner Pipeline (TA-Owned)">
+      <SectionCard
+        title="Joiner Pipeline (TA-Owned)"
+        onAddRow={addNewJoiner}
+      >
         <div className="ta-table-container">
           <table className="ta-table">
             <thead>
@@ -1949,7 +1948,7 @@ function TATracker() {
                           Edit
                         </button>
                         <button
-                          className="btn-secondary btn-xs"
+                          className="btn-danger btn-xs"
                           style={{ marginLeft: 4, paddingInline: 6 }}
                           onClick={() => deleteJoiner(j.id)}
                           title="Delete row"
@@ -1977,7 +1976,7 @@ function TATracker() {
   );
 }
 
-function SectionCard({ title, children }) {
+function SectionCard({ title, children, onAddRow }) {
   return (
     <div
       style={{
@@ -2006,11 +2005,29 @@ function SectionCard({ title, children }) {
         >
           {title}
         </h3>
-        <span
-          style={{ fontSize: "11px", color: "#9ca3af" }}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
         >
-          (Operational TA view)
-        </span>
+          <span style={{ fontSize: "11px", color: "#9ca3af" }}>
+            (Operational TA view)
+          </span>
+          {onAddRow && (
+            <button
+              className="btn-primary btn-xs"
+              style={{
+                background: "#16a34a",
+                borderColor: "#16a34a",
+              }}
+              onClick={onAddRow}
+            >
+              + Add Row
+            </button>
+          )}
+        </div>
       </div>
       {children}
     </div>
