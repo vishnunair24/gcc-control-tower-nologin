@@ -57,7 +57,40 @@ function TATracker() {
       "Ageing (Days)",
       "Priority",
     ];
-    const reqWs = XLSX.utils.aoa_to_sheet([reqHeaders]);
+    const reqData = [
+      reqHeaders,
+      [
+        "JOB-001",
+        "Senior Java Engineer",
+        "Alice Hiring",
+        "Java",
+        3,
+        "Open",
+        15,
+        "High",
+      ],
+      [
+        "JOB-002",
+        "Frontend Developer",
+        "Bob Hiring",
+        "React",
+        2,
+        "On Hold",
+        5,
+        "Medium",
+      ],
+      [
+        "JOB-003",
+        "Data Engineer",
+        "Carol Hiring",
+        "Data Engineering",
+        1,
+        "Cancelled",
+        30,
+        "Low",
+      ],
+    ];
+    const reqWs = XLSX.utils.aoa_to_sheet(reqData);
 
     // Sheet 2: Candidate Pipeline (TA View)
     const candHeaders = [
@@ -71,7 +104,43 @@ function TATracker() {
       "Advanced",
       "Current Status",
     ];
-    const candWs = XLSX.utils.aoa_to_sheet([candHeaders]);
+    const candData = [
+      candHeaders,
+      [
+        "JOB-001",
+        "John Doe",
+        "Ravi Recruiter",
+        "Completed",
+        "Cleared",
+        "Cleared",
+        "--",
+        "Offer Stage",
+        "In Process",
+      ],
+      [
+        "JOB-001",
+        "Jane Smith",
+        "Ravi Recruiter",
+        "Completed",
+        "Cleared",
+        "Cleared",
+        "Cleared",
+        "Final Round",
+        "Interviewing",
+      ],
+      [
+        "JOB-002",
+        "Mark Taylor",
+        "Priya Recruiter",
+        "Completed",
+        "Pending",
+        "--",
+        "--",
+        "Screening",
+        "On Hold",
+      ],
+    ];
+    const candWs = XLSX.utils.aoa_to_sheet(candData);
 
     // Sheet 3: Interview Turnaround Tracking
     const intHeaders = [
@@ -83,7 +152,37 @@ function TATracker() {
       "TAT (Days)",
       "Status",
     ];
-    const intWs = XLSX.utils.aoa_to_sheet([intHeaders]);
+    const intData = [
+      intHeaders,
+      [
+        "JOB-001",
+        "John Doe",
+        "Technical Round 1",
+        "2026-01-10",
+        "2026-01-11",
+        1,
+        "Cleared",
+      ],
+      [
+        "JOB-001",
+        "Jane Smith",
+        "Technical Round 2",
+        "2026-01-12",
+        "2026-01-13",
+        1,
+        "Pending Feedback",
+      ],
+      [
+        "JOB-002",
+        "Mark Taylor",
+        "TA Screening",
+        "2026-01-09",
+        "2026-01-09",
+        0,
+        "On Hold",
+      ],
+    ];
+    const intWs = XLSX.utils.aoa_to_sheet(intData);
 
     // Sheet 4: Offer Lifecycle
     const offerHeaders = [
@@ -95,7 +194,37 @@ function TATracker() {
       "Actual DOJ",
       "Remarks",
     ];
-    const offerWs = XLSX.utils.aoa_to_sheet([offerHeaders]);
+    const offerData = [
+      offerHeaders,
+      [
+        "JOB-001",
+        "John Doe",
+        "2026-01-14",
+        "Accepted",
+        "2026-02-01",
+        "",
+        "Joining in Feb batch",
+      ],
+      [
+        "JOB-001",
+        "Jane Smith",
+        "2026-01-16",
+        "Pending",
+        "2026-02-15",
+        "",
+        "Waiting for candidate confirmation",
+      ],
+      [
+        "JOB-003",
+        "Alex Lee",
+        "2026-01-05",
+        "Declined",
+        "2026-01-25",
+        "",
+        "Offer declined - salary mismatch",
+      ],
+    ];
+    const offerWs = XLSX.utils.aoa_to_sheet(offerData);
 
     // Sheet 5: Joiner Pipeline
     const joinHeaders = [
@@ -107,7 +236,37 @@ function TATracker() {
       "Status",
       "Drop Risk",
     ];
-    const joinWs = XLSX.utils.aoa_to_sheet([joinHeaders]);
+    const joinData = [
+      joinHeaders,
+      [
+        "Alice Hiring",
+        "JOB-001",
+        "John Doe",
+        "2026-01-18",
+        "2026-02-01",
+        "Joined",
+        "Low",
+      ],
+      [
+        "Bob Hiring",
+        "JOB-002",
+        "Mark Taylor",
+        "2026-01-20",
+        "2026-02-10",
+        "Yet to Join",
+        "Medium",
+      ],
+      [
+        "Carol Hiring",
+        "JOB-003",
+        "Alex Lee",
+        "2026-01-08",
+        "2026-01-25",
+        "No Show",
+        "High",
+      ],
+    ];
+    const joinWs = XLSX.utils.aoa_to_sheet(joinData);
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, reqWs, "Open_Requisition_Tracker");
