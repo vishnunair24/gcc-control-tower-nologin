@@ -581,8 +581,8 @@ function SectionCard({ title, children }) {
 
 function SimpleTable({ columns, rows }) {
   return (
-    <div className="table-container">
-      <table className="tracker-table">
+    <div className="ta-table-container">
+      <table className="ta-table">
         <thead>
           <tr>
             {columns.map((c) => (
@@ -601,7 +601,7 @@ function SimpleTable({ columns, rows }) {
             ))
           ) : (
             <tr>
-              <td colSpan={columns.length} style={{ textAlign: "center" }}>
+              <td colSpan={columns.length} className="ta-table-empty">
                 No data available.
               </td>
             </tr>

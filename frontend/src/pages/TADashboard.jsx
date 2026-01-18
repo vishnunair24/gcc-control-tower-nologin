@@ -23,21 +23,66 @@ function TADashboard() {
   }, []);
 
   const kpis = [
-    { key: "totalApprovedDemand", label: "Total Approved Demand" },
-    { key: "totalJoiners", label: "Total Joiners" },
+    {
+      key: "totalApprovedDemand",
+      label: "Total Approved Demand",
+      color: "bg-blue-600",
+    },
+    {
+      key: "totalJoiners",
+      label: "Total Joiners",
+      color: "bg-green-600",
+    },
     {
       key: "offersAcceptedYetToJoin",
       label: "Offers Accepted (Yet to Join)",
+      color: "bg-emerald-500",
     },
-    { key: "offersInProgress", label: "Offers In Progress" },
-    { key: "offersDeclined", label: "Offers Declined" },
-    { key: "openActivePositions", label: "Open Active Positions" },
-    { key: "positionsOnHold", label: "Positions On Hold" },
-    { key: "cancelledPositions", label: "Cancelled Positions" },
-    { key: "avgPositionAgeing", label: "Avg Position Ageing (Days)" },
-    { key: "avgProfileAgeing", label: "Avg Profile Ageing (Days)" },
-    { key: "avgTimeToFill", label: "Avg Time to Fill (Days)" },
-    { key: "avgTimeToStart", label: "Avg Time to Start (Days)" },
+    {
+      key: "offersInProgress",
+      label: "Offers In Progress",
+      color: "bg-amber-500",
+    },
+    {
+      key: "offersDeclined",
+      label: "Offers Declined",
+      color: "bg-red-500",
+    },
+    {
+      key: "openActivePositions",
+      label: "Open Active Positions",
+      color: "bg-indigo-500",
+    },
+    {
+      key: "positionsOnHold",
+      label: "Positions On Hold",
+      color: "bg-yellow-500",
+    },
+    {
+      key: "cancelledPositions",
+      label: "Cancelled Positions",
+      color: "bg-slate-500",
+    },
+    {
+      key: "avgPositionAgeing",
+      label: "Avg Position Ageing (Days)",
+      color: "bg-sky-600",
+    },
+    {
+      key: "avgProfileAgeing",
+      label: "Avg Profile Ageing (Days)",
+      color: "bg-teal-600",
+    },
+    {
+      key: "avgTimeToFill",
+      label: "Avg Time to Fill (Days)",
+      color: "bg-purple-600",
+    },
+    {
+      key: "avgTimeToStart",
+      label: "Avg Time to Start (Days)",
+      color: "bg-cyan-600",
+    },
   ];
 
   return (
@@ -46,7 +91,7 @@ function TADashboard() {
 
       {/* KPI CARDS – same style as main Dashboard */}
       <div className="grid grid-cols-4 gap-6 mb-8">
-        {kpis.map(({ key, label }) => (
+        {kpis.map(({ key, label, color }) => (
           <KpiCard
             key={key}
             title={label}
@@ -55,7 +100,7 @@ function TADashboard() {
                 ? Math.round(tiles[key])
                 : "--"
             }
-            color="bg-blue-600"
+            color={color}
           />
         ))}
       </div>

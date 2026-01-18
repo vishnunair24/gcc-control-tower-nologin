@@ -263,3 +263,56 @@
   white-space: nowrap;
   text-align: center;
 }
+
+/* =========================
+   TA Tracker simple tables
+========================= */
+
+.ta-table-container {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.ta-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12.5px;
+}
+
+.ta-table thead th {
+  background: #f9fafb;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #374151;
+  padding: 6px 8px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ta-table tbody td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #f3f4f6;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 30px;
+}
+
+.ta-table tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.ta-table tbody tr:hover {
+  background: #f1f5ff;
+}
+
+.ta-table-empty {
+  padding: 8px 12px;
+  text-align: center;
+  color: #9ca3af;
+}
