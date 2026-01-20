@@ -71,6 +71,10 @@ exports.replaceInfraFromExcel = async (req, res) => {
       startDate: colIndex("start"),
       endDate: colIndex("end"),
       owner: colIndex("owner"),
+      // allow both "customerName" and "customer name"
+      customerName: headerRow.findIndex(
+        (h) => h.includes("customername") || h.includes("customer name")
+      ),
     };
 
     const today = new Date();
@@ -81,6 +85,11 @@ exports.replaceInfraFromExcel = async (req, res) => {
 
       const startDate = parseDate(row[idx.startDate], today);
       const endDate = parseDate(row[idx.endDate], startDate);
+
+      const rawCustomer =
+        idx.customerName >= 0
+          ? String(row[idx.customerName] || "").trim()
+          : "";
 
       tasks.push({
         infraPhase:
@@ -95,6 +104,7 @@ exports.replaceInfraFromExcel = async (req, res) => {
         endDate,
         owner:
           row[idx.owner]?.toString().trim() || "",
+        customerName: rawCustomer || null,
       });
     });
 

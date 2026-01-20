@@ -49,12 +49,18 @@ exports.replaceTAFromExcel = async (req, res) => {
       status: col(reqHeaders, "status"),
       ageing: col(reqHeaders, "ageing(days)"), // optional, may be -1
       priority: col(reqHeaders, "priority"),
+      customerName: col(reqHeaders, "customername"),
     };
 
     const taRequisitions = [];
 
     reqRows.slice(1).forEach((row) => {
       if (row.every((c) => String(c).trim() === "")) return;
+
+      const rawCustomer =
+        reqIdx.customerName >= 0
+          ? String(row[reqIdx.customerName] || "").trim()
+          : "";
 
       taRequisitions.push({
         requisitionId: row[reqIdx.jobId]?.toString().trim() || "",
@@ -69,6 +75,7 @@ exports.replaceTAFromExcel = async (req, res) => {
         targetClosureDate: null,
         location: null,
         businessUnit: null,
+        customerName: rawCustomer || null,
       });
     });
 
@@ -93,6 +100,7 @@ exports.replaceTAFromExcel = async (req, res) => {
           int2: col(candHeaders, "int2"),
           advanced: col(candHeaders, "advanced"),
           currentStatus: col(candHeaders, "currentstatus"),
+          customerName: col(candHeaders, "customername"),
         };
 
         candRows.slice(1).forEach((row) => {
@@ -100,6 +108,11 @@ exports.replaceTAFromExcel = async (req, res) => {
 
           const name = row[cIdx.candidateName]?.toString().trim() || "";
           if (!name) return;
+
+          const rawCustomer =
+            cIdx.customerName >= 0
+              ? String(row[cIdx.customerName] || "").trim()
+              : "";
 
           taCandidates.push({
             candidateId: `${row[cIdx.jobId] || ""}-${name}`,
@@ -112,6 +125,7 @@ exports.replaceTAFromExcel = async (req, res) => {
             currentStage: row[cIdx.advanced]?.toString().trim() || null,
             stageEntryDate: null,
             candidateStatus: row[cIdx.currentStatus]?.toString().trim() || null,
+            customerName: rawCustomer || null,
           });
         });
       }
@@ -135,10 +149,16 @@ exports.replaceTAFromExcel = async (req, res) => {
           interviewDate: col(intHeaders, "interviewdate"),
           feedbackDate: col(intHeaders, "feedbackdate"),
           status: col(intHeaders, "status"),
+          customerName: col(intHeaders, "customername"),
         };
 
         intRows.slice(1).forEach((row) => {
           if (row.every((c) => String(c).trim() === "")) return;
+
+          const rawCustomer =
+            iIdx.customerName >= 0
+              ? String(row[iIdx.customerName] || "").trim()
+              : "";
 
           taInterviews.push({
             interviewId: null,
@@ -149,6 +169,7 @@ exports.replaceTAFromExcel = async (req, res) => {
             feedbackDate: parseDate(row[iIdx.feedbackDate]),
             interviewResult: row[iIdx.status]?.toString().trim() || null,
             interviewer: null,
+            customerName: rawCustomer || null,
           });
         });
       }
@@ -173,10 +194,16 @@ exports.replaceTAFromExcel = async (req, res) => {
           expectedDoj: col(offerHeaders, "expecteddoj"),
           actualDoj: col(offerHeaders, "actualdoj"),
           remarks: col(offerHeaders, "remarks"),
+          customerName: col(offerHeaders, "customername"),
         };
 
         offerRows.slice(1).forEach((row) => {
           if (row.every((c) => String(c).trim() === "")) return;
+
+          const rawCustomer =
+            oIdx.customerName >= 0
+              ? String(row[oIdx.customerName] || "").trim()
+              : "";
 
           taOffers.push({
             offerId: null,
@@ -188,6 +215,7 @@ exports.replaceTAFromExcel = async (req, res) => {
             expectedDoj: parseDate(row[oIdx.expectedDoj]),
             actualDoj: parseDate(row[oIdx.actualDoj]),
             declineReason: row[oIdx.remarks]?.toString().trim() || null,
+            customerName: rawCustomer || null,
           });
         });
       }
@@ -203,8 +231,8 @@ exports.replaceTAFromExcel = async (req, res) => {
         defval: "",
       });
       if (joinRows.length > 1) {
-        const joinHeaders = joinRows[0].map(normalizeHeader);
-        const jIdx = {
+          const joinHeaders = joinRows[0].map(normalizeHeader);
+          const jIdx = {
           hiringManager: col(joinHeaders, "hiringmanager"),
           jobId: col(joinHeaders, "jobid"),
           candidate: col(joinHeaders, "candidate"),
@@ -212,10 +240,16 @@ exports.replaceTAFromExcel = async (req, res) => {
           doj: col(joinHeaders, "doj"),
           status: col(joinHeaders, "status"),
           dropRisk: col(joinHeaders, "droprisk"),
+            customerName: col(joinHeaders, "customername"),
         };
 
         joinRows.slice(1).forEach((row) => {
           if (row.every((c) => String(c).trim() === "")) return;
+
+          const rawCustomer =
+            jIdx.customerName >= 0
+              ? String(row[jIdx.customerName] || "").trim()
+              : "";
 
           taJoiners.push({
             joinerId: null,
@@ -224,6 +258,7 @@ exports.replaceTAFromExcel = async (req, res) => {
             joiningDate: parseDate(row[jIdx.doj]),
             joiningStatus: row[jIdx.status]?.toString().trim() || null,
             onboardingStatus: row[jIdx.dropRisk]?.toString().trim() || null,
+            customerName: rawCustomer || null,
           });
         });
       }

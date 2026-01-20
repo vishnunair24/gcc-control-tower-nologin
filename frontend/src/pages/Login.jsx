@@ -119,7 +119,7 @@ export default function Login() {
               to="/reset"
               className="text-blue-600 hover:text-blue-700 font-medium"
             >
-              Reset password
+              Set/Reset password
             </Link>
           </div>
         </div>
