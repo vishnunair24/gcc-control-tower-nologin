@@ -1,10 +1,12 @@
 import { API_BASE_URL } from "../config";
 import { useState, useRef } from "react";
 import axios from "axios";
+import { useAuth } from "../authContext";
 
 export default function ExcelReplaceUpload({
   endpoint = `${API_BASE_URL}/excel/replace`,
-  confirmText = "This will completely replace ALL existing data. Continue?",
+  confirmText =
+    "If the Excel is for this customer, their data will be replaced; otherwise rows will be appended. Continue?",
   onSuccess,
 }) {
   const [file, setFile] = useState(null);
@@ -12,6 +14,7 @@ export default function ExcelReplaceUpload({
 
   // 🔑 CRITICAL FIX
   const fileInputRef = useRef(null);
+  const { currentCustomerName } = useAuth();
 
   const upload = async () => {
     if (!file) {
@@ -26,8 +29,14 @@ export default function ExcelReplaceUpload({
     const formData = new FormData();
     formData.append("file", file);
 
+    const url = currentCustomerName
+      ? `${endpoint}?customerName=${encodeURIComponent(
+          currentCustomerName
+        )}`
+      : endpoint;
+
     try {
-      const res = await axios.post(endpoint, formData);
+      const res = await axios.post(url, formData);
 
       alert(
         `Excel Replace Successful!\n\nDeleted: ${res.data.deleted}\nInserted: ${res.data.inserted}`
@@ -36,7 +45,12 @@ export default function ExcelReplaceUpload({
       onSuccess?.();
     } catch (err) {
       console.error("Excel upload failed:", err);
-      alert("Excel replace failed. Check backend logs.");
+      const serverMessage = err?.response?.data?.error;
+      if (serverMessage) {
+        alert(serverMessage);
+      } else {
+        alert("Excel replace failed. Check backend logs.");
+      }
     } finally {
       setLoading(false);
 

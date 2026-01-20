@@ -114,8 +114,51 @@ exports.replaceInfraFromExcel = async (req, res) => {
       });
     }
 
+    // Decide whether to replace for a specific customer or just append
+    const viewCustomer = (req.query.customerName || "").trim();
+    const excelCustomers = new Set(
+      tasks
+        .map((t) => (t.customerName || "").trim())
+        .filter((c) => c !== "")
+    );
+
+    // If user is in a specific customer view, block uploads for other customers
+    if (viewCustomer) {
+      const customerList = Array.from(excelCustomers);
+
+      if (customerList.length === 0) {
+        return res.status(400).json({
+          error:
+            `This file does not contain any customerName values, but you are currently viewing '${viewCustomer}'. ` +
+            "Please upload a file filtered for this customer or go back to the customer selection page and choose the correct customer.",
+        });
+      }
+
+      if (!(customerList.length === 1 && customerList[0] === viewCustomer)) {
+        return res.status(400).json({
+          error:
+            `This Excel looks to be for customer(s): ${customerList.join(", ")}, but you are currently viewing '${viewCustomer}'. ` +
+            "Please go back to the customer selection page and choose the matching customer before uploading.",
+        });
+      }
+    }
+
+    let customerForReplace = null;
+    if (viewCustomer && excelCustomers.size === 1 && excelCustomers.has(viewCustomer)) {
+      customerForReplace = viewCustomer;
+    } else if (!viewCustomer && excelCustomers.size === 1) {
+      const [onlyCustomer] = Array.from(excelCustomers);
+      customerForReplace = onlyCustomer || null;
+    }
+
     const result = await prisma.$transaction(async (tx) => {
-      const deleted = await tx.infraTask.deleteMany();
+      let deleted = { count: 0 };
+
+      if (customerForReplace) {
+        deleted = await tx.infraTask.deleteMany({
+          where: { customerName: customerForReplace },
+        });
+      }
       const inserted = await tx.infraTask.createMany({
         data: tasks,
       });

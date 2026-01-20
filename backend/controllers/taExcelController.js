@@ -264,13 +264,66 @@ exports.replaceTAFromExcel = async (req, res) => {
       }
     }
 
+    // Decide whether to replace data for a specific customer or append
+    const viewCustomer = (req.query.customerName || "").trim();
+    const allCustomers = new Set();
+
+    const addCustomer = (val) => {
+      const c = (val || "").trim();
+      if (c) allCustomers.add(c);
+    };
+
+    taRequisitions.forEach((r) => addCustomer(r.customerName));
+    taCandidates.forEach((r) => addCustomer(r.customerName));
+    taInterviews.forEach((r) => addCustomer(r.customerName));
+    taOffers.forEach((r) => addCustomer(r.customerName));
+    taJoiners.forEach((r) => addCustomer(r.customerName));
+
+    const excelCustomers = Array.from(allCustomers);
+
+    // If user is in a specific customer view, block uploads for other customers
+    if (viewCustomer) {
+      if (excelCustomers.length === 0) {
+        return res.status(400).json({
+          error:
+            `This file does not contain any customerName values, but you are currently viewing '${viewCustomer}'. ` +
+            "Please upload a file filtered for this customer or go back to the customer selection page and choose the correct customer.",
+        });
+      }
+
+      if (!(excelCustomers.length === 1 && excelCustomers[0] === viewCustomer)) {
+        return res.status(400).json({
+          error:
+            `This Excel looks to be for customer(s): ${excelCustomers.join(", ")}, but you are currently viewing '${viewCustomer}'. ` +
+            "Please go back to the customer selection page and choose the matching customer before uploading.",
+        });
+      }
+    }
+
+    let customerForReplace = null;
+    if (viewCustomer && allCustomers.size === 1 && allCustomers.has(viewCustomer)) {
+      customerForReplace = viewCustomer;
+    } else if (!viewCustomer && allCustomers.size === 1) {
+      const [onlyCustomer] = Array.from(allCustomers);
+      customerForReplace = onlyCustomer || null;
+    }
+
     // Persist all TA data in a single transaction
     const result = await prisma.$transaction(async (tx) => {
-      const delReq = await tx.tARequisition.deleteMany();
-      const delCand = await tx.tACandidate.deleteMany();
-      const delInt = await tx.tAInterview.deleteMany();
-      const delOffer = await tx.tAOffer.deleteMany();
-      const delJoin = await tx.tAJoiner.deleteMany();
+      let delReq = { count: 0 };
+      let delCand = { count: 0 };
+      let delInt = { count: 0 };
+      let delOffer = { count: 0 };
+      let delJoin = { count: 0 };
+
+      if (customerForReplace) {
+        const where = { customerName: customerForReplace };
+        delReq = await tx.tARequisition.deleteMany({ where });
+        delCand = await tx.tACandidate.deleteMany({ where });
+        delInt = await tx.tAInterview.deleteMany({ where });
+        delOffer = await tx.tAOffer.deleteMany({ where });
+        delJoin = await tx.tAJoiner.deleteMany({ where });
+      }
 
       const insReq = taRequisitions.length
         ? await tx.tARequisition.createMany({ data: taRequisitions })
