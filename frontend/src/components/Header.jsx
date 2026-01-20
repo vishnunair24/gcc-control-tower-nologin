@@ -32,8 +32,8 @@ export default function Header() {
         GCC Control Tower
       </h1>
 
-      {/* CENTER: Current customer (if any) */}
-      {currentCustomerName && (
+      {/* CENTER: Current customer (if any, hide for CUSTOMER users) */}
+      {currentCustomerName && user?.role !== "CUSTOMER" && (
         <div className="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
           Customer: <span className="font-medium">{currentCustomerName}</span>
         </div>

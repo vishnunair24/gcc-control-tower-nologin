@@ -3,8 +3,8 @@ import BackButton from "./BackButton";
 
 export default function AuthLayout({ title, subtitle, children, showBackButton = true }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-100 flex items-center justify-center px-4">
-      <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 bg-white shadow-2xl rounded-xl overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center px-4 auth-mountain-bg">
+      <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 bg-white shadow-2xl rounded-xl overflow-hidden relative z-10">
         {/* Left: Brand panel */}
         <div className="hidden md:flex flex-col justify-between bg-slate-900 text-slate-50 p-8">
           <div>

@@ -1,3 +1,66 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Animated summit-style background for auth screens */
+.auth-mountain-bg {
+	position: relative;
+	min-height: 100vh;
+	overflow: hidden;
+	background: radial-gradient(circle at 10% 20%, #e0f2fe 0, #fbfbff 40%, #e5e7eb 100%);
+}
+
+.auth-mountain-bg::before,
+.auth-mountain-bg::after {
+	content: "";
+	position: absolute;
+	inset: 45% -20% -10% -20%;
+	pointer-events: none;
+}
+
+/* Distant mountain range */
+.auth-mountain-bg::before {
+	background:
+		linear-gradient(135deg, rgba(15, 23, 42, 0.0) 40%, rgba(30, 64, 175, 0.45) 60%) 10% 30% / 45% 80% no-repeat,
+		linear-gradient(-135deg, rgba(15, 23, 42, 0.0) 35%, rgba(30, 64, 175, 0.4) 60%) 65% 20% / 55% 85% no-repeat,
+		linear-gradient(180deg, rgba(15, 23, 42, 0.0) 0%, rgba(15, 23, 42, 0.12) 35%, rgba(15, 23, 42, 0.28) 100%);
+	filter: blur(1px);
+	animation: auth-mountain-drift 32s ease-in-out infinite alternate;
+}
+
+/* Foreground summit peak */
+.auth-mountain-bg::after {
+	inset: 55% -10% -20% -10%;
+	background:
+		linear-gradient(135deg, rgba(248, 250, 252, 0.0) 48%, rgba(248, 250, 252, 0.9) 52%) 45% 10% / 26% 80% no-repeat,
+		linear-gradient(-135deg, rgba(15, 23, 42, 0.0) 45%, rgba(15, 23, 42, 0.82) 70%) 52% 25% / 32% 90% no-repeat,
+		radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.4), transparent 55%),
+		radial-gradient(circle at 80% 15%, rgba(191, 219, 254, 0.7), transparent 55%),
+		linear-gradient(180deg, rgba(15, 23, 42, 0.0) 0%, rgba(15, 23, 42, 0.4) 35%, rgba(15, 23, 42, 0.8) 100%);
+	opacity: 0.96;
+	animation: auth-mountain-drift-foreground 26s ease-in-out infinite alternate;
+}
+
+@keyframes auth-mountain-drift {
+	0% {
+		transform: translate3d(-1.5%, 0, 0) scale(1.02);
+	}
+	50% {
+		transform: translate3d(1.5%, -0.6%, 0) scale(1.02);
+	}
+	100% {
+		transform: translate3d(-1%, 0.4%, 0) scale(1.02);
+	}
+}
+
+@keyframes auth-mountain-drift-foreground {
+	0% {
+		transform: translate3d(1.5%, -1%, 0) scale(1.05);
+	}
+	50% {
+		transform: translate3d(-1%, 0.4%, 0) scale(1.05);
+	}
+	100% {
+		transform: translate3d(1%, 0, 0) scale(1.05);
+	}
+}
