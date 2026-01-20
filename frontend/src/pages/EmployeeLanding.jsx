@@ -41,18 +41,38 @@ export default function EmployeeLanding() {
             className="h-10 w-auto object-contain"
           />
           {user && (
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-semibold shadow">
-                {initials}
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col text-right text-xs">
+                <span className="font-medium text-gray-900 truncate max-w-[160px]">
+                  {user.name}
+                </span>
+                <span className="text-gray-500 uppercase tracking-wide">
+                  {user.role}
+                </span>
+                {user.role === "ADMIN" && (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/admin/user-approvals")}
+                    className="text-[11px] text-blue-600 hover:text-blue-700 font-medium mt-0.5"
+                  >
+                    User approvals
+                  </button>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                title="Sign out"
-                className="flex items-center justify-center h-8 w-8 rounded-full bg-red-600 text-white hover:bg-red-700 shadow text-sm font-semibold"
-              >
-                ⏻
-              </button>
+
+              <div className="flex items-center gap-2">
+                <div className="h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-semibold shadow">
+                  {initials}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  title="Sign out"
+                  className="flex items-center justify-center h-8 w-8 rounded-full bg-red-600 text-white hover:bg-red-700 shadow text-sm font-semibold"
+                >
+                  ⏻
+                </button>
+              </div>
             </div>
           )}
         </div>
