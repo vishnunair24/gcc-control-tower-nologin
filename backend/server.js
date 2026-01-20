@@ -6,6 +6,7 @@ const taskRoutes = require("./routes/taskRoutes");
 const infraTaskRoutes = require("./routes/infraTaskRoutes");
 const excelUploadRoutes = require("./routes/excelUploadRoutes");
 const taRoutes = require("./routes/taRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
@@ -28,6 +29,9 @@ app.use("/excel", excelUploadRoutes);
 
 // TA Dashboard + Tracker
 app.use("/ta", taRoutes);
+
+// Auth & user management (self signup, login, reset)
+app.use("/auth", authRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

@@ -14,6 +14,22 @@ datasource db {
 }
 
 // ==============================
+// SHARED ENUMS (USERS & ACCESS)
+// ==============================
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+  CUSTOMER
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ==============================
 // PROGRAM TRACKER (EXISTING)
 // ==============================
 model Task {
@@ -28,6 +44,10 @@ model Task {
   phase       String
   milestone   String
   owner       String
+
+  // Optional customer scoping (null = legacy/global)
+  customerName String?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -47,6 +67,9 @@ model InfraTask {
   endDate         DateTime
 
   owner           String
+
+  // Optional customer scoping (null = legacy/global)
+  customerName String?
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -72,6 +95,9 @@ model TARequisition {
   location               String?
   businessUnit           String?
 
+  // Optional customer scoping (null = legacy/global)
+  customerName           String?
+
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 }
@@ -90,6 +116,9 @@ model TACandidate {
   stageEntryDate     DateTime?
   candidateStatus    String?
 
+  // Optional customer scoping (null = legacy/global)
+  customerName       String?
+
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
@@ -105,6 +134,9 @@ model TAInterview {
   feedbackDate   DateTime?
   interviewResult String?
   interviewer    String?
+
+  // Optional customer scoping (null = legacy/global)
+  customerName   String?
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -123,6 +155,9 @@ model TAOffer {
   actualDoj         DateTime?
   declineReason     String?
 
+  // Optional customer scoping (null = legacy/global)
+  customerName      String?
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
@@ -136,6 +171,9 @@ model TAJoiner {
   joiningDate    DateTime?
   joiningStatus  String?  // Joined / No Show
   onboardingStatus String?
+
+  // Optional customer scoping (null = legacy/global)
+  customerName     String?
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -154,6 +192,9 @@ model TAExecMonthly {
   openActive       Int    @default(0)
   onHold           Int    @default(0)
   cancelled        Int    @default(0)
+
+  // Optional customer scoping (null = legacy/global)
+  customerName     String?
 }
 
 // Monthly recruiter productivity snapshot
@@ -167,4 +208,36 @@ model TARecruiterMonthly {
   offersReleased     Int    @default(0)
   joiners            Int    @default(0)
   avgTatDays         Float  @default(0)
+  
+  // Optional customer scoping (null = legacy/global)
+  customerName       String?
+}
+
+// ==============================
+// USER MANAGEMENT & AUTH
+// ==============================
+
+model User {
+  id        Int        @id @default(autoincrement())
+
+  name      String
+  email     String     @unique
+  role      Role
+
+  // For CUSTOMER role, this will be mandatory at signup (enforced in app layer).
+  customerName String?
+
+  phone     String?
+  country   String?
+  place     String?
+
+  status    UserStatus @default(PENDING)
+
+  // Password & reset
+  passwordHash       String?
+  resetToken         String?
+  resetTokenExpires  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

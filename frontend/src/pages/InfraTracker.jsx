@@ -1,6 +1,7 @@
 import { API_BASE_URL } from "../config";
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../authContext";
 import axios from "axios";
 import ExcelReplaceUpload from "../components/ExcelReplaceUpload";
 import * as XLSX from "xlsx";
@@ -32,6 +33,8 @@ const createEmptyNewRow = () => ({
 export default function InfraTracker() {
   const navigate = useNavigate();
 
+  const { currentCustomerName } = useAuth();
+
   const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
   const [page, setPage] = useState(1);
@@ -56,13 +59,16 @@ export default function InfraTracker() {
   // Load Infra Tasks
   // =========================
   const loadTasks = async () => {
-    const res = await axios.get(`${API_BASE_URL}/infra-tasks`);
+    const params = currentCustomerName
+      ? { params: { customerName: currentCustomerName } }
+      : undefined;
+    const res = await axios.get(`${API_BASE_URL}/infra-tasks`, params);
     setTasks(res.data || []);
   };
 
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, [currentCustomerName]);
 
   // =========================
   // Unique owners
@@ -117,7 +123,11 @@ export default function InfraTracker() {
   };
 
   const saveEdit = async () => {
-    await axios.put(`${API_BASE_URL}/infra-tasks/${editRowId}`, editData);
+    const payload = {
+      ...editData,
+      customerName: currentCustomerName || null,
+    };
+    await axios.put(`${API_BASE_URL}/infra-tasks/${editRowId}`, payload);
     setEditRowId(null);
     setEditData({});
     loadTasks();
@@ -155,7 +165,10 @@ export default function InfraTracker() {
   });
 
   const saveNewRow = async (row) => {
-    const payload = normalizePayload(row);
+    const payload = {
+      ...normalizePayload(row),
+      customerName: currentCustomerName || null,
+    };
     delete payload._tempId;
 
     await axios.post(`${API_BASE_URL}/infra-tasks`, payload);
@@ -166,7 +179,10 @@ export default function InfraTracker() {
 
   const saveAllNewRows = async () => {
     for (const row of newRows) {
-      const payload = normalizePayload(row);
+      const payload = {
+        ...normalizePayload(row),
+        customerName: currentCustomerName || null,
+      };
       delete payload._tempId;
       await axios.post(`${API_BASE_URL}/infra-tasks`, payload);
     }

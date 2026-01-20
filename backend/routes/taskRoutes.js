@@ -12,8 +12,26 @@ const prisma = require("../prisma/client");
 // Routes
 // =======================
 
-// Get all tasks
-router.get("/", getTasks);
+// Get all tasks (optionally scoped by customerName)
+router.get("/", async (req, res) => {
+  try {
+    const { customerName } = req.query;
+
+    if (!customerName) {
+      return getTasks(req, res);
+    }
+
+    const tasks = await prisma.task.findMany({
+      where: { customerName },
+      orderBy: { id: "asc" },
+    });
+
+    res.json(tasks);
+  } catch (err) {
+    console.error("❌ Fetch tasks (scoped) failed:", err);
+    res.status(500).json({ error: "Failed to fetch tasks" });
+  }
+});
 
 // Update task (edit from tracker)
 router.put("/:id", updateTask);
@@ -47,6 +65,7 @@ router.post("/", async (req, res) => {
       startDate,
       endDate,
       owner,
+      customerName,
     } = req.body;
 
     // ✅ SAFELY DERIVE DURATION
@@ -66,6 +85,7 @@ router.post("/", async (req, res) => {
         progress,
         phase,
         milestone,
+        customerName: customerName || null,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         duration, // ✅ FIXED

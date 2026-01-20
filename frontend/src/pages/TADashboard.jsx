@@ -1,14 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { API_BASE_URL } from "../config";
+import { useAuth } from "../authContext";
 
 function TADashboard() {
   const [tiles, setTiles] = useState(null);
   const [demandByTech, setDemandByTech] = useState([]);
   const [recruiterPerf, setRecruiterPerf] = useState([]);
 
+  const { currentCustomerName } = useAuth();
+
   useEffect(() => {
-    fetch(`${API_BASE_URL}/ta/dashboard`)
+    const url = currentCustomerName
+      ? `${API_BASE_URL}/ta/dashboard?customerName=${encodeURIComponent(
+          currentCustomerName
+        )}`
+      : `${API_BASE_URL}/ta/dashboard`;
+
+    fetch(url)
       .then((res) => res.json())
       .then((data) => {
         setTiles(data.tiles || null);
@@ -20,7 +29,7 @@ function TADashboard() {
         setDemandByTech([]);
         setRecruiterPerf([]);
       });
-  }, []);
+  }, [currentCustomerName]);
 
   const kpis = [
     {

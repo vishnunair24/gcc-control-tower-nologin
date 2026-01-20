@@ -1,46 +1,130 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { API_BASE_URL } from "../config";
+import AuthLayout from "../components/AuthLayout";
+import { useAuth } from "../authContext";
 
 export default function Login() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Minimal placeholder auth: accept any credentials
-    localStorage.setItem("auth", "true");
-    navigate("/dashboard");
+    setError("");
+    setLoading(true);
+    try {
+      const res = await axios.post(`${API_BASE_URL}/auth/login`, {
+        email,
+        password,
+      });
+
+      const user = res.data;
+      login(user);
+
+      if (user.role === "EMPLOYEE") {
+        navigate("/employee/landing");
+      } else if (user.role === "CUSTOMER") {
+        navigate("/dashboard");
+      } else if (user.role === "ADMIN") {
+        navigate("/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      console.error("Login failed", err);
+      const msg =
+        err?.response?.data?.error ||
+        "Unable to sign in. Please check your credentials.";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="max-w-md mx-auto mt-24 bg-white p-6 rounded shadow">
-      <h2 className="text-2xl font-semibold mb-4">Sign in to GCC Control Tower</h2>
-      <form onSubmit={handleSubmit}>
-        <label className="block text-sm font-medium text-gray-700">Username</label>
-        <input
-          className="w-full mt-1 mb-3 p-2 border rounded"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
+    <AuthLayout
+      title="Sign in"
+      subtitle="Access GCC Control Tower with your Summit credentials."
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
-        <label className="block text-sm font-medium text-gray-700">Password</label>
-        <input
-          type="password"
-          className="w-full mt-1 mb-4 p-2 border rounded"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <div>
+          <label className="block text-sm font-medium text-slate-700">
+            Email address
+          </label>
+          <input
+            type="email"
+            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700">
+            Password
+          </label>
+          <input
+            type="password"
+            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
 
         <button
           type="submit"
-          className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700"
+          disabled={loading}
+          className="w-full inline-flex justify-center items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Sign in
+          {loading ? "Signing in..." : "Sign in"}
         </button>
+
+        <div className="flex flex-col gap-2 text-sm text-slate-700 mt-2">
+          <div className="flex justify-between">
+            <span>New here?</span>
+            <div className="space-x-3">
+              <Link
+                to="/signup/employee"
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Sign up as Employee
+              </Link>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Link
+              to="/signup/customer"
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+            >
+              Sign up as Customer
+            </Link>
+          </div>
+
+          <div className="flex justify-between pt-2 border-t border-slate-100 mt-2">
+            <span className="text-slate-500">Forgot password?</span>
+            <Link
+              to="/reset"
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Reset password
+            </Link>
+          </div>
+        </div>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

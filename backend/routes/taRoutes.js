@@ -8,10 +8,18 @@ const router = express.Router();
 // =============================
 router.get("/dashboard", async (req, res) => {
   try {
+    const { customerName } = req.query;
+
     const [requisitions, offers, joiners] = await Promise.all([
-      prisma.tARequisition.findMany(),
-      prisma.tAOffer.findMany(),
-      prisma.tAJoiner.findMany(),
+      prisma.tARequisition.findMany({
+        where: customerName ? { customerName } : undefined,
+      }),
+      prisma.tAOffer.findMany({
+        where: customerName ? { customerName } : undefined,
+      }),
+      prisma.tAJoiner.findMany({
+        where: customerName ? { customerName } : undefined,
+      }),
     ]);
 
     const totalApprovedDemand = requisitions.reduce(
@@ -203,13 +211,30 @@ router.get("/dashboard", async (req, res) => {
 // =============================
 router.get("/tracker", async (req, res) => {
   try {
+    const { customerName } = req.query;
+
     const [requisitions, candidates, interviews, offers, joiners] =
       await Promise.all([
-        prisma.tARequisition.findMany({ orderBy: { id: "asc" } }),
-        prisma.tACandidate.findMany({ orderBy: { id: "asc" } }),
-        prisma.tAInterview.findMany({ orderBy: { id: "asc" } }),
-        prisma.tAOffer.findMany({ orderBy: { id: "asc" } }),
-        prisma.tAJoiner.findMany({ orderBy: { id: "asc" } }),
+        prisma.tARequisition.findMany({
+          where: customerName ? { customerName } : undefined,
+          orderBy: { id: "asc" },
+        }),
+        prisma.tACandidate.findMany({
+          where: customerName ? { customerName } : undefined,
+          orderBy: { id: "asc" },
+        }),
+        prisma.tAInterview.findMany({
+          where: customerName ? { customerName } : undefined,
+          orderBy: { id: "asc" },
+        }),
+        prisma.tAOffer.findMany({
+          where: customerName ? { customerName } : undefined,
+          orderBy: { id: "asc" },
+        }),
+        prisma.tAJoiner.findMany({
+          where: customerName ? { customerName } : undefined,
+          orderBy: { id: "asc" },
+        }),
       ]);
 
     res.json({

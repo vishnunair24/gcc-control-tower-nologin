@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { API_BASE_URL } from "../config";
+import { useAuth } from "../authContext";
 import ExcelReplaceUpload from "../components/ExcelReplaceUpload";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -95,8 +96,16 @@ function TATracker() {
   const [joinerEdit, setJoinerEdit] = useState(null);
   const [newJoiners, setNewJoiners] = useState([]);
 
+  const { currentCustomerName } = useAuth();
+
   const loadTracker = () => {
-    fetch(`${API_BASE_URL}/ta/tracker`)
+    const url = currentCustomerName
+      ? `${API_BASE_URL}/ta/tracker?customerName=${encodeURIComponent(
+          currentCustomerName
+        )}`
+      : `${API_BASE_URL}/ta/tracker`;
+
+    fetch(url)
       .then((res) => res.json())
       .then((payload) => {
         setRequisitions(payload.requisitions || []);
@@ -120,7 +129,7 @@ function TATracker() {
 
   useEffect(() => {
     loadTracker();
-  }, []);
+  }, [currentCustomerName]);
 
   const downloadTemplate = () => {
     // Sheet 1: Open Requisition Tracker

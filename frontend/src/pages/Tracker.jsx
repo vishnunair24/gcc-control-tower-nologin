@@ -1,6 +1,7 @@
 import { API_BASE_URL } from "../config";
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../authContext";
 import axios from "axios";
 import ExcelReplaceUpload from "../components/ExcelReplaceUpload";
 import * as XLSX from "xlsx";
@@ -40,6 +41,8 @@ const createEmptyNewRow = () => ({
 export default function Tracker() {
   const navigate = useNavigate();
 
+  const { currentCustomerName } = useAuth();
+
   const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
   const [page, setPage] = useState(1);
@@ -61,13 +64,16 @@ export default function Tracker() {
   // Load data
   // =========================
   const loadTasks = async () => {
-    const res = await axios.get(`${API_BASE_URL}/tasks`);
+    const params = currentCustomerName
+      ? { params: { customerName: currentCustomerName } }
+      : undefined;
+    const res = await axios.get(`${API_BASE_URL}/tasks`, params);
     setTasks(res.data || []);
   };
 
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, [currentCustomerName]);
 
   // =========================
   // Unique owners
@@ -127,7 +133,11 @@ export default function Tracker() {
   };
 
   const saveEdit = async () => {
-    await axios.put(`${API_BASE_URL}/tasks/${editRowId}`, editData);
+    const payload = {
+      ...editData,
+      customerName: currentCustomerName || null,
+    };
+    await axios.put(`${API_BASE_URL}/tasks/${editRowId}`, payload);
     setEditRowId(null);
     setEditData({});
     loadTasks();
@@ -165,7 +175,10 @@ export default function Tracker() {
   });
 
   const saveNewRow = async (row) => {
-    const payload = normalizePayload(row);
+    const payload = {
+      ...normalizePayload(row),
+      customerName: currentCustomerName || null,
+    };
     delete payload._tempId;
 
     await axios.post(`${API_BASE_URL}/tasks`, payload);
@@ -175,7 +188,10 @@ export default function Tracker() {
 
   const saveAllNewRows = async () => {
     for (const row of newRows) {
-      const payload = normalizePayload(row);
+      const payload = {
+        ...normalizePayload(row),
+        customerName: currentCustomerName || null,
+      };
       delete payload._tempId;
       await axios.post(`${API_BASE_URL}/tasks`, payload);
     }

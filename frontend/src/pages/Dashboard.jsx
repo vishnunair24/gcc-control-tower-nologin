@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "../config";
 import { useEffect, useState, useMemo } from "react";
+import { useAuth } from "../authContext";
 import axios from "axios";
 import { motion } from "framer-motion";
 import {
@@ -55,12 +56,17 @@ function Dashboard() {
     status: "",
   });
 
+  const { currentCustomerName } = useAuth();
+
   useEffect(() => {
     fetchTasks();
-  }, []);
+  }, [currentCustomerName]);
 
   const fetchTasks = async () => {
-    const res = await axios.get(`${API_BASE_URL}/tasks`);
+    const params = currentCustomerName
+      ? { params: { customerName: currentCustomerName } }
+      : undefined;
+    const res = await axios.get(`${API_BASE_URL}/tasks`, params);
     setTasks(res.data);
   };
 

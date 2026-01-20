@@ -5,11 +5,14 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 /* =====================================================
-   GET ALL INFRA TASKS
+   GET ALL INFRA TASKS (OPTIONALLY BY CUSTOMER)
 ===================================================== */
 router.get("/", async (req, res) => {
   try {
+    const { customerName } = req.query;
+
     const tasks = await prisma.infraTask.findMany({
+      where: customerName ? { customerName } : undefined,
       orderBy: { id: "asc" },
     });
     res.json(tasks);
@@ -32,6 +35,7 @@ router.post("/", async (req, res) => {
       startDate,
       endDate,
       owner,
+      customerName,
     } = req.body;
 
     /**
@@ -51,6 +55,7 @@ router.post("/", async (req, res) => {
         startDate: new Date(startDate), // NEVER NULL
         endDate: endDate ? new Date(endDate) : null,
         owner: owner || "",
+        customerName: customerName || null,
       },
     });
 
