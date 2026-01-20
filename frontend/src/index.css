@@ -2,11 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Static summit-style background for auth screens */
+/* Static summit-style background for auth screens (inspired by Summit hero) */
 .auth-mountain-bg {
 	position: relative;
 	min-height: 100vh;
 	overflow: hidden;
 	background:
-		linear-gradient(135deg, #020617 0%, #0f172a 35%, #1e3a8a 70%, #38bdf8 100%);
+		linear-gradient(135deg,
+			#020617 0%,      /* deep charcoal at bottom left */
+			#111827 28%,     /* dark mountain base */
+			#f59e0b 55%,     /* warm golden glow */
+			#fde68a 70%,     /* soft sunrise yellow */
+			#60a5fa 100%     /* cool blue sky at top right */
+		);
 }
