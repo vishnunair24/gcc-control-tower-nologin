@@ -50,6 +50,7 @@ export default function Login() {
     <AuthLayout
       title="Sign in"
       subtitle="Access GCC Control Tower with your Summit credentials."
+      showBackButton={false}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (

@@ -1,7 +1,7 @@
 import summitLogo from "../assets/summit-logo.png";
 import BackButton from "./BackButton";
 
-export default function AuthLayout({ title, subtitle, children }) {
+export default function AuthLayout({ title, subtitle, children, showBackButton = true }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-100 flex items-center justify-center px-4">
       <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 bg-white shadow-2xl rounded-xl overflow-hidden">
@@ -29,9 +29,11 @@ export default function AuthLayout({ title, subtitle, children }) {
 
         {/* Right: Form panel */}
         <div className="p-8 md:p-10 flex flex-col justify-center">
-          <div className="mb-4">
-            <BackButton fallback="/login" />
-          </div>
+          {showBackButton && (
+            <div className="mb-4">
+              <BackButton fallback="/login" />
+            </div>
+          )}
           <div className="mb-4">
             {title && (
               <h1 className="text-2xl font-semibold text-slate-900 mb-1">
