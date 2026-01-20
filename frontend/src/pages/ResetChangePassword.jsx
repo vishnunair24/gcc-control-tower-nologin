@@ -31,9 +31,12 @@ export default function ResetChangePassword() {
       const res = await axios.post(`${API_BASE_URL}/auth/reset/generate-token`, {
         email,
       });
-      setGeneratedToken(res.data?.resetToken || "");
+      // Do not expose the token in the UI; just mark that a token exists
+      if (res.data?.resetToken) {
+        setGeneratedToken("generated");
+      }
       setUseToken(true);
-      setMessage("One-time token generated. Use it below.");
+      setMessage("One-time token generated.");
     } catch (err) {
       console.error("Generate reset token failed", err);
       const msg = err?.response?.data?.error || "Failed to generate token";
@@ -135,11 +138,7 @@ export default function ResetChangePassword() {
               className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
               value={token}
               onChange={(e) => setToken(e.target.value)}
-              placeholder={
-                generatedToken
-                  ? `Token: ${generatedToken}`
-                  : "Enter token shared with you"
-              }
+              placeholder="Enter token shared with you"
             />
           </div>
         )}
