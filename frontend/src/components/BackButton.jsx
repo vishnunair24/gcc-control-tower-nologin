@@ -15,9 +15,9 @@ export default function BackButton({ fallback }) {
     <button
       type="button"
       onClick={handleClick}
-      className="inline-flex items-center text-xs font-medium text-slate-700 hover:text-slate-900 border border-slate-300 rounded-full px-3 py-1 bg-white shadow-sm hover:border-slate-400 transition-colors mb-3"
+      className="inline-flex items-center text-xs text-slate-600 hover:text-slate-900 mb-3"
     >
-      <span className="mr-1">04</span>
+      <span className="mr-1">←</span>
       <span>Back</span>
     </button>
   );
