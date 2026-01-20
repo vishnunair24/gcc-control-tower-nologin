@@ -26,11 +26,9 @@ export default function Login() {
       const user = res.data;
       login(user);
 
-      if (user.role === "EMPLOYEE") {
+      if (user.role === "EMPLOYEE" || user.role === "ADMIN") {
         navigate("/employee/landing");
       } else if (user.role === "CUSTOMER") {
-        navigate("/dashboard");
-      } else if (user.role === "ADMIN") {
         navigate("/dashboard");
       } else {
         navigate("/dashboard");

@@ -6,8 +6,8 @@ export default function EmployeeLanding() {
   const { user, selectCustomer } = useAuth();
   const navigate = useNavigate();
 
-  if (!user || user.role !== "EMPLOYEE") {
-    // Simple guard: non-employees fall back to dashboard
+  if (!user || (user.role !== "EMPLOYEE" && user.role !== "ADMIN")) {
+    // Simple guard: only employee and admin can use this landing
     navigate("/dashboard");
     return null;
   }

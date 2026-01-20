@@ -43,7 +43,11 @@ export default function ProgramIntelligence() {
 
   // ================= LOAD DATA =================
   useEffect(() => {
-    if (user?.role === "EMPLOYEE" && !currentCustomerName) {
+    if (
+      user &&
+      (user.role === "EMPLOYEE" || user.role === "ADMIN") &&
+      !currentCustomerName
+    ) {
       navigate("/employee/landing");
       return;
     }

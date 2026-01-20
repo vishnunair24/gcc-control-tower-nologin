@@ -43,7 +43,11 @@ export default function InfraIntelligence() {
   // Load Infra Tasks
   // =========================
   useEffect(() => {
-    if (user?.role === "EMPLOYEE" && !currentCustomerName) {
+    if (
+      user &&
+      (user.role === "EMPLOYEE" || user.role === "ADMIN") &&
+      !currentCustomerName
+    ) {
       navigate("/employee/landing");
       return;
     }

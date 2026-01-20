@@ -72,7 +72,11 @@ export default function Tracker() {
   };
 
   useEffect(() => {
-    if (user?.role === "EMPLOYEE" && !currentCustomerName) {
+    if (
+      user &&
+      (user.role === "EMPLOYEE" || user.role === "ADMIN") &&
+      !currentCustomerName
+    ) {
       navigate("/employee/landing");
       return;
     }
