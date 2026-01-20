@@ -1,11 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../authContext";
 import { CUSTOMERS } from "../customerConfig";
-import Header from "../components/Header";
 import summitLogo from "../assets/summit-logo.png";
 
 export default function EmployeeLanding() {
-  const { user, selectCustomer } = useAuth();
+  const { user, selectCustomer, logout } = useAuth();
   const navigate = useNavigate();
 
   if (!user || (user.role !== "EMPLOYEE" && user.role !== "ADMIN")) {
@@ -19,16 +18,43 @@ export default function EmployeeLanding() {
     navigate("/dashboard");
   };
 
+  const initials = user?.name
+    ? user.name
+        .split(" ")
+        .map((p) => p[0])
+        .join("")
+        .toUpperCase()
+    : "U";
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <header className="border-b bg-white">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-3">
-          <Header />
           <img
             src={summitLogo}
             alt="Summit Consulting"
             className="h-10 w-auto object-contain"
           />
+          {user && (
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-semibold shadow">
+                {initials}
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                title="Sign out"
+                className="flex items-center justify-center h-8 w-8 rounded-full bg-red-600 text-white hover:bg-red-700 shadow text-sm font-semibold"
+              >
+                ⏻
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -63,11 +89,8 @@ export default function EmployeeLanding() {
                     {c.label[0]}
                   </span>
                 </div>
-                <div className="text-sm font-medium text-slate-900 mb-1">
+                <div className="text-sm font-medium text-slate-900">
                   {c.label}
-                </div>
-                <div className="text-xs text-slate-500">
-                  Customer name: <span className="font-semibold">{c.key}</span>
                 </div>
               </button>
             ))}
