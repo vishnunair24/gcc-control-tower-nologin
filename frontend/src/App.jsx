@@ -30,6 +30,14 @@ function RequireAuth({ children }) {
   return children;
 }
 
+function RequireNonCustomer({ children }) {
+  const { user } = useAuth();
+  if (user && user.role === "CUSTOMER") {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+}
+
 function ShellLayout() {
   return (
     <div>
@@ -110,18 +118,47 @@ function App() {
           path="/admin/user-approvals"
           element={<AdminUserApprovals />}
         />
-        <Route path="/tracker" element={<Tracker />} />
-        <Route path="/infra-tracker" element={<InfraTracker />} />
-        <Route
-          path="/program-intelligence"
-          element={<ProgramIntelligence />}
-        />
-        <Route path="/ta-dashboard" element={<TADashboard />} />
-        <Route path="/ta-tracker" element={<TATracker />} />
-        <Route
-          path="/infra-intelligence"
-          element={<InfraIntelligence />}
-        />
+          <Route
+            path="/tracker"
+            element={
+              <RequireNonCustomer>
+                <Tracker />
+              </RequireNonCustomer>
+            }
+          />
+          <Route
+            path="/infra-tracker"
+            element={
+              <RequireNonCustomer>
+                <InfraTracker />
+              </RequireNonCustomer>
+            }
+          />
+          <Route
+            path="/program-intelligence"
+            element={
+              <RequireNonCustomer>
+                <ProgramIntelligence />
+              </RequireNonCustomer>
+            }
+          />
+          <Route path="/ta-dashboard" element={<TADashboard />} />
+          <Route
+            path="/ta-tracker"
+            element={
+              <RequireNonCustomer>
+                <TATracker />
+              </RequireNonCustomer>
+            }
+          />
+          <Route
+            path="/infra-intelligence"
+            element={
+              <RequireNonCustomer>
+                <InfraIntelligence />
+              </RequireNonCustomer>
+            }
+          />
       </Route>
 
       {/* Fallback: anything unknown goes to login */}
