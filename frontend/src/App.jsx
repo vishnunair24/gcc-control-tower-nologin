@@ -65,7 +65,7 @@ function ShellLayout() {
           style={{ marginTop: HEADER_HEIGHT }}
         >
           <div className="mb-2">
-            <BackButton fallback="/dashboard" />
+            <BackButton fallback="/employee/landing" />
           </div>
           <Outlet />
         </main>
@@ -85,6 +85,16 @@ function App() {
       <Route path="/reset/first-time" element={<ResetFirstTime />} />
       <Route path="/reset/change" element={<ResetChangePassword />} />
 
+      {/* Standalone landing page (no sidebar/header), but protected */}
+      <Route
+        path="/employee/landing"
+        element={
+          <RequireAuth>
+            <EmployeeLanding />
+          </RequireAuth>
+        }
+      />
+
       {/* Protected routes under common shell */}
       <Route
         element={
@@ -95,7 +105,6 @@ function App() {
       >
         <Route path="/" element={<Navigate to="/dashboard" />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/employee/landing" element={<EmployeeLanding />} />
         <Route
           path="/admin/user-approvals"
           element={<AdminUserApprovals />}

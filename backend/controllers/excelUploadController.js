@@ -50,8 +50,7 @@ exports.replaceFromExcel = async (req, res) => {
     }
 
     const headerRow = rows[0].map(normalizeHeader);
-    const colIndex = (name) =>
-      headerRow.findIndex((h) => h.includes(name));
+    const colIndex = (name) => headerRow.findIndex((h) => h.includes(name));
 
     const idx = {
       workstream: colIndex("workstream"),
@@ -64,6 +63,10 @@ exports.replaceFromExcel = async (req, res) => {
       phase: colIndex("phase"),
       milestone: colIndex("milestone"),
       owner: colIndex("owner"),
+      // allow both "customerName" and "customer name"
+      customerName: headerRow.findIndex(
+        (h) => h.includes("customername") || h.includes("customer name")
+      ),
     };
 
     const today = new Date();
@@ -74,6 +77,9 @@ exports.replaceFromExcel = async (req, res) => {
 
       const startDate = parseDate(row[idx.startDate], today);
       const endDate = parseDate(row[idx.endDate], startDate);
+
+      const rawCustomer =
+        idx.customerName >= 0 ? String(row[idx.customerName] || "").trim() : "";
 
       tasks.push({
         workstream: row[idx.workstream] || "General",
@@ -86,6 +92,7 @@ exports.replaceFromExcel = async (req, res) => {
         phase: row[idx.phase] || "",
         milestone: row[idx.milestone] || "",
         owner: row[idx.owner] || "",
+         customerName: rawCustomer || null,
       });
     });
 
@@ -127,8 +134,7 @@ exports.replaceInfraFromExcel = async (req, res) => {
     }
 
     const headerRow = rows[0].map(normalizeHeader);
-    const colIndex = (name) =>
-      headerRow.findIndex((h) => h.includes(name));
+    const colIndex = (name) => headerRow.findIndex((h) => h.includes(name));
 
     const idx = {
       infraPhase: colIndex("infra"),
@@ -138,6 +144,9 @@ exports.replaceInfraFromExcel = async (req, res) => {
       startDate: colIndex("start"),
       endDate: colIndex("end"),
       owner: colIndex("owner"),
+      customerName: headerRow.findIndex(
+        (h) => h.includes("customername") || h.includes("customer name")
+      ),
     };
 
     const today = new Date();
@@ -145,6 +154,9 @@ exports.replaceInfraFromExcel = async (req, res) => {
 
     rows.slice(1).forEach((row) => {
       if (row.every((c) => String(c).trim() === "")) return;
+
+      const rawCustomer =
+        idx.customerName >= 0 ? String(row[idx.customerName] || "").trim() : "";
 
       infraTasks.push({
         infraPhase: row[idx.infraPhase] || "General",
@@ -154,6 +166,7 @@ exports.replaceInfraFromExcel = async (req, res) => {
         startDate: parseDate(row[idx.startDate], today),
         endDate: parseDate(row[idx.endDate], today),
         owner: row[idx.owner] || "",
+        customerName: rawCustomer || null,
       });
     });
 
