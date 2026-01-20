@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { API_BASE_URL } from "../config";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../authContext";
 
 function TADashboard() {
@@ -8,9 +9,15 @@ function TADashboard() {
   const [demandByTech, setDemandByTech] = useState([]);
   const [recruiterPerf, setRecruiterPerf] = useState([]);
 
-  const { currentCustomerName } = useAuth();
+  const navigate = useNavigate();
+  const { user, currentCustomerName } = useAuth();
 
   useEffect(() => {
+    if (user?.role === "EMPLOYEE" && !currentCustomerName) {
+      navigate("/employee/landing");
+      return;
+    }
+
     const url = currentCustomerName
       ? `${API_BASE_URL}/ta/dashboard?customerName=${encodeURIComponent(
           currentCustomerName
@@ -29,7 +36,7 @@ function TADashboard() {
         setDemandByTech([]);
         setRecruiterPerf([]);
       });
-  }, [currentCustomerName]);
+  }, [user, currentCustomerName]);
 
   const kpis = [
     {

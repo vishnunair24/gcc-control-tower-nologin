@@ -33,7 +33,7 @@ const createEmptyNewRow = () => ({
 export default function InfraTracker() {
   const navigate = useNavigate();
 
-  const { currentCustomerName } = useAuth();
+  const { user, currentCustomerName } = useAuth();
 
   const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
@@ -67,8 +67,12 @@ export default function InfraTracker() {
   };
 
   useEffect(() => {
+    if (user?.role === "EMPLOYEE" && !currentCustomerName) {
+      navigate("/employee/landing");
+      return;
+    }
     loadTasks();
-  }, [currentCustomerName]);
+  }, [user, currentCustomerName]);
 
   // =========================
   // Unique owners

@@ -1,6 +1,7 @@
 import { API_BASE_URL } from "../config";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../authContext";
 import axios from "axios";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -20,6 +21,7 @@ const fmtMonth = (d) =>
 
 export default function ProgramIntelligence() {
   const navigate = useNavigate();
+  const { user, currentCustomerName } = useAuth();
   const [tasks, setTasks] = useState([]);
 
   // ================= TIMELINE CONTROLS =================
@@ -41,10 +43,19 @@ export default function ProgramIntelligence() {
 
   // ================= LOAD DATA =================
   useEffect(() => {
-    axios.get(`${API_BASE_URL}/tasks`).then((res) => {
+    if (user?.role === "EMPLOYEE" && !currentCustomerName) {
+      navigate("/employee/landing");
+      return;
+    }
+
+    const params = currentCustomerName
+      ? { params: { customerName: currentCustomerName } }
+      : undefined;
+
+    axios.get(`${API_BASE_URL}/tasks`, params).then((res) => {
       setTasks(res.data || []);
     });
-  }, []);
+  }, [user, currentCustomerName]);
 
   // ================= DATA PREP =================
   const validTasks = useMemo(

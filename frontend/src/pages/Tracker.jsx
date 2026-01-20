@@ -41,7 +41,7 @@ const createEmptyNewRow = () => ({
 export default function Tracker() {
   const navigate = useNavigate();
 
-  const { currentCustomerName } = useAuth();
+  const { user, currentCustomerName } = useAuth();
 
   const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
@@ -72,8 +72,12 @@ export default function Tracker() {
   };
 
   useEffect(() => {
+    if (user?.role === "EMPLOYEE" && !currentCustomerName) {
+      navigate("/employee/landing");
+      return;
+    }
     loadTasks();
-  }, [currentCustomerName]);
+  }, [user, currentCustomerName]);
 
   // =========================
   // Unique owners

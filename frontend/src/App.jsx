@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
@@ -18,6 +18,7 @@ import ResetChangePassword from "./pages/ResetChangePassword";
 import AdminUserApprovals from "./pages/AdminUserApprovals";
 import { useAuth } from "./authContext";
 import summitLogo from "./assets/summit-logo.png";
+import BackButton from "./components/BackButton";
 
 const HEADER_HEIGHT = 56; // single frozen header height
 const HEADER_BG_COLOR = "#ffffff";
@@ -28,6 +29,49 @@ function RequireAuth({ children }) {
     return <Navigate to="/login" replace />;
   }
   return children;
+}
+
+function ShellLayout() {
+  return (
+    <div>
+      <Sidebar />
+      <div className="ml-52">
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            right: 0,
+            left: "13rem",
+            height: HEADER_HEIGHT,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0 20px",
+            background: HEADER_BG_COLOR,
+            borderBottom: "1px solid #e5e7eb",
+            zIndex: 50,
+          }}
+        >
+          <Header />
+          <img
+            src={summitLogo}
+            alt="Summit Consulting"
+            style={{ height: "40px", objectFit: "contain" }}
+          />
+        </div>
+
+        <main
+          className="p-6 bg-gray-100 min-h-screen"
+          style={{ marginTop: HEADER_HEIGHT }}
+        >
+          <div className="mb-2">
+            <BackButton fallback="/dashboard" />
+          </div>
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
 }
 
 function App() {
@@ -41,75 +85,37 @@ function App() {
       <Route path="/reset/first-time" element={<ResetFirstTime />} />
       <Route path="/reset/change" element={<ResetChangePassword />} />
 
-      {/* Protected app shell */}
+      {/* Protected routes under common shell */}
       <Route
-        path="/"
         element={
           <RequireAuth>
-            <div>
-              <Sidebar />
-              <div className="ml-52">
-                <div
-                  style={{
-                    position: "fixed",
-                    top: 0,
-                    right: 0,
-                    left: "13rem",
-                    height: HEADER_HEIGHT,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "0 20px",
-                    background: HEADER_BG_COLOR,
-                    borderBottom: "1px solid #e5e7eb",
-                    zIndex: 50,
-                  }}
-                >
-                  <Header />
-                  <img
-                    src={summitLogo}
-                    alt="Summit Consulting"
-                    style={{ height: "40px", objectFit: "contain" }}
-                  />
-                </div>
-
-                <main
-                  className="p-6 bg-gray-100 min-h-screen"
-                  style={{ marginTop: HEADER_HEIGHT }}
-                >
-                  <Routes>
-                    <Route path="/" element={<Navigate to="/dashboard" />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route
-                      path="/employee/landing"
-                      element={<EmployeeLanding />}
-                    />
-                    <Route
-                      path="/admin/user-approvals"
-                      element={<AdminUserApprovals />}
-                    />
-                    <Route path="/tracker" element={<Tracker />} />
-                    <Route path="/infra-tracker" element={<InfraTracker />} />
-                    <Route
-                      path="/program-intelligence"
-                      element={<ProgramIntelligence />}
-                    />
-                    <Route path="/ta-dashboard" element={<TADashboard />} />
-                    <Route path="/ta-tracker" element={<TATracker />} />
-                    <Route
-                      path="/infra-intelligence"
-                      element={<InfraIntelligence />}
-                    />
-                  </Routes>
-                </main>
-              </div>
-            </div>
+            <ShellLayout />
           </RequireAuth>
         }
-      />
+      >
+        <Route path="/" element={<Navigate to="/dashboard" />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/employee/landing" element={<EmployeeLanding />} />
+        <Route
+          path="/admin/user-approvals"
+          element={<AdminUserApprovals />}
+        />
+        <Route path="/tracker" element={<Tracker />} />
+        <Route path="/infra-tracker" element={<InfraTracker />} />
+        <Route
+          path="/program-intelligence"
+          element={<ProgramIntelligence />}
+        />
+        <Route path="/ta-dashboard" element={<TADashboard />} />
+        <Route path="/ta-tracker" element={<TATracker />} />
+        <Route
+          path="/infra-intelligence"
+          element={<InfraIntelligence />}
+        />
+      </Route>
 
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      {/* Fallback: anything unknown goes to login */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

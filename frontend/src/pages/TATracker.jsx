@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { API_BASE_URL } from "../config";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../authContext";
 import ExcelReplaceUpload from "../components/ExcelReplaceUpload";
 import * as XLSX from "xlsx";
@@ -60,6 +61,7 @@ const createEmptyNewJoiner = () => ({
 });
 
 function TATracker() {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     jobId: "",
     jobTitle: "",
@@ -96,7 +98,7 @@ function TATracker() {
   const [joinerEdit, setJoinerEdit] = useState(null);
   const [newJoiners, setNewJoiners] = useState([]);
 
-  const { currentCustomerName } = useAuth();
+  const { user, currentCustomerName } = useAuth();
 
   const loadTracker = () => {
     const url = currentCustomerName
@@ -128,8 +130,12 @@ function TATracker() {
   };
 
   useEffect(() => {
+    if (user?.role === "EMPLOYEE" && !currentCustomerName) {
+      navigate("/employee/landing");
+      return;
+    }
     loadTracker();
-  }, [currentCustomerName]);
+  }, [user, currentCustomerName]);
 
   const downloadTemplate = () => {
     // Sheet 1: Open Requisition Tracker

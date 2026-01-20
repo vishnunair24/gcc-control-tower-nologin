@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "../config";
 import { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../authContext";
 import axios from "axios";
 import { motion } from "framer-motion";
@@ -45,6 +46,7 @@ const daysFromToday = (d) => {
 };
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
   const [activeSignal, setActiveSignal] = useState(null);
 
@@ -56,11 +58,15 @@ function Dashboard() {
     status: "",
   });
 
-  const { currentCustomerName } = useAuth();
+  const { user, currentCustomerName } = useAuth();
 
   useEffect(() => {
+    if (user?.role === "EMPLOYEE" && !currentCustomerName) {
+      navigate("/employee/landing");
+      return;
+    }
     fetchTasks();
-  }, [currentCustomerName]);
+  }, [user, currentCustomerName]);
 
   const fetchTasks = async () => {
     const params = currentCustomerName

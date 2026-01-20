@@ -2,6 +2,7 @@ import { API_BASE_URL } from "../config";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../authContext";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -14,6 +15,7 @@ const fmt = (d) =>
 
 export default function InfraIntelligence() {
   const navigate = useNavigate();
+  const { user, currentCustomerName } = useAuth();
   const [tasks, setTasks] = useState([]);
 
   // =========================
@@ -41,10 +43,19 @@ export default function InfraIntelligence() {
   // Load Infra Tasks
   // =========================
   useEffect(() => {
+    if (user?.role === "EMPLOYEE" && !currentCustomerName) {
+      navigate("/employee/landing");
+      return;
+    }
+
+    const params = currentCustomerName
+      ? { params: { customerName: currentCustomerName } }
+      : undefined;
+
     axios
-      .get(`${API_BASE_URL}/infra-tasks`)
+      .get(`${API_BASE_URL}/infra-tasks`, params)
       .then((res) => setTasks(res.data || []));
-  }, []);
+  }, [user, currentCustomerName]);
 
   const validTasks = useMemo(
     () =>

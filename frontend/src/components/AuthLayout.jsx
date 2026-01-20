@@ -1,4 +1,5 @@
 import summitLogo from "../assets/summit-logo.png";
+import BackButton from "./BackButton";
 
 export default function AuthLayout({ title, subtitle, children }) {
   return (
@@ -28,7 +29,10 @@ export default function AuthLayout({ title, subtitle, children }) {
 
         {/* Right: Form panel */}
         <div className="p-8 md:p-10 flex flex-col justify-center">
-          <div className="mb-6">
+          <div className="mb-4">
+            <BackButton fallback="/login" />
+          </div>
+          <div className="mb-4">
             {title && (
               <h1 className="text-2xl font-semibold text-slate-900 mb-1">
                 {title}
