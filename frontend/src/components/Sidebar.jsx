@@ -11,7 +11,7 @@ function Sidebar() {
 
       <nav className="space-y-3">
         <Link to="/dashboard" className="block hover:text-gray-300">
-          Dashboard
+          Executive Dashboard
         </Link>
 
         {!isCustomer && (
@@ -25,20 +25,6 @@ function Sidebar() {
               className="block hover:text-gray-300"
             >
               Program Intelligence
-            </Link>
-
-            <Link
-              to="/infra-tracker"
-              className="block hover:text-gray-300"
-            >
-              Infra Tracker
-            </Link>
-
-            <Link
-              to="/infra-intelligence"
-              className="block hover:text-gray-300"
-            >
-              Infra Intelligence
             </Link>
           </>
         )}

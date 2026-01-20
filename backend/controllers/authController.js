@@ -105,12 +105,27 @@ exports.approveUser = async (req, res) => {
   try {
     const id = Number(req.params.id);
     const { customerName } = req.body; // optional normalization
+    const existing = await prisma.user.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    let tokenData = {};
+    if (!existing.passwordHash) {
+      const token = crypto.randomBytes(16).toString("hex");
+      const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+      tokenData = {
+        resetToken: token,
+        resetTokenExpires: expires,
+      };
+    }
 
     const user = await prisma.user.update({
       where: { id },
       data: {
         status: "APPROVED",
         customerName: customerName || undefined,
+        ...tokenData,
       },
     });
 

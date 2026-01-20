@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { API_BASE_URL } from "../config";
 import AuthLayout from "../components/AuthLayout";
 
 function useQuery() {
@@ -20,27 +18,6 @@ export default function ResetFirstTime() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
-
-  const handleGenerateToken = async () => {
-    setError("");
-    setMessage("");
-    try {
-      const res = await axios.post(`${API_BASE_URL}/auth/reset/generate-token`, {
-        email,
-      });
-      const generated = res.data?.resetToken || "";
-      if (generated) {
-        setToken(generated);
-        setMessage("One-time token generated. It has been filled in below.");
-      } else {
-        setMessage("Token generated. Please use the value shared with you.");
-      }
-    } catch (err) {
-      console.error("Generate reset token failed", err);
-      const msg = err?.response?.data?.error || "Failed to generate token";
-      setError(msg);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -101,23 +78,14 @@ export default function ResetFirstTime() {
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="block text-sm font-medium text-slate-700">
-              One-time token (optional)
-            </label>
-            <button
-              type="button"
-              onClick={handleGenerateToken}
-              className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Generate token
-            </button>
-          </div>
+          <label className="block text-sm font-medium text-slate-700">
+            One-time token (if provided)
+          </label>
           <input
             className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
             value={token}
             onChange={(e) => setToken(e.target.value)}
-            placeholder="If provided, it will be validated"
+            placeholder="Enter token shared by admin (optional)"
           />
         </div>
 
