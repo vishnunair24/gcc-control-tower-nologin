@@ -1,6 +1,7 @@
-import customerLogo from "../assets/customer-logo.png";
+import genericCustomerLogo from "../assets/customer-logo.png";
 import { useAuth } from "../authContext";
 import { useNavigate } from "react-router-dom";
+import { CUSTOMER_LOGO_MAP } from "../customerConfig";
 
 export default function Header() {
   const { user, currentCustomerName, logout } = useAuth();
@@ -18,6 +19,11 @@ export default function Header() {
     logout();
     navigate("/login");
   };
+
+  const activeLogo =
+    currentCustomerName && CUSTOMER_LOGO_MAP[currentCustomerName]
+      ? CUSTOMER_LOGO_MAP[currentCustomerName]
+      : genericCustomerLogo;
 
   return (
     <div className="flex items-center w-full gap-4">
@@ -37,8 +43,8 @@ export default function Header() {
       <div className="flex items-center ml-auto gap-4">
         <div className="flex items-center pr-4 border-r border-gray-300">
           <img
-            src={customerLogo}
-            alt="Customer Logo"
+            src={activeLogo}
+            alt={currentCustomerName ? `${currentCustomerName} logo` : "Customer Logo"}
             style={{
               height: "28px",
               objectFit: "contain",

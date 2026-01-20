@@ -1,23 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../authContext";
-
-const CUSTOMERS = [
-  {
-    key: "Infinite",
-    label: "Infinite Electronics",
-    logoPath: "/customer-logos/infinite.png",
-  },
-  {
-    key: "VIP",
-    label: "VIP",
-    logoPath: "/customer-logos/vip.png",
-  },
-  {
-    key: "Routeware",
-    label: "Routeware",
-    logoPath: "/customer-logos/routeware.png",
-  },
-];
+import { CUSTOMERS } from "../customerConfig";
 
 export default function EmployeeLanding() {
   const { user, selectCustomer } = useAuth();
@@ -36,7 +19,7 @@ export default function EmployeeLanding() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-      <div className="max-w-4xl w-full px-6 py-10">
+      <div className="max-w-5xl w-full px-6 py-10">
         <h2 className="text-2xl font-semibold text-slate-900 mb-2">
           Choose a customer
         </h2>
@@ -44,7 +27,7 @@ export default function EmployeeLanding() {
           Select the customer whose dashboards and trackers you want to work on.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
           {CUSTOMERS.map((c) => (
             <button
               key={c.key}
@@ -54,7 +37,7 @@ export default function EmployeeLanding() {
             >
               <div className="h-16 w-32 mb-3 flex items-center justify-center">
                 <img
-                  src={c.logoPath}
+                  src={c.logo}
                   alt={c.label}
                   className="max-h-16 max-w-full object-contain opacity-90 group-hover:opacity-100"
                   onError={(e) => {
@@ -70,7 +53,7 @@ export default function EmployeeLanding() {
                 {c.label}
               </div>
               <div className="text-xs text-slate-500">
-                Click to open dashboards for {c.key}.
+                Customer name: <span className="font-semibold">{c.key}</span>
               </div>
             </button>
           ))}
