@@ -18,7 +18,6 @@ import ResetChangePassword from "./pages/ResetChangePassword";
 import AdminUserApprovals from "./pages/AdminUserApprovals";
 import { useAuth } from "./authContext";
 import summitLogo from "./assets/summit-logo.png";
-import BackButton from "./components/BackButton";
 
 const HEADER_HEIGHT = 56; // single frozen header height
 const HEADER_BG_COLOR = "#ffffff";
@@ -61,13 +60,15 @@ function ShellLayout() {
         </div>
 
         <main
-          className="p-6 bg-gray-100 min-h-screen"
+          className="p-6 bg-gray-100 min-h-screen flex flex-col"
           style={{ marginTop: HEADER_HEIGHT }}
         >
-          <div className="mb-2">
-            <BackButton fallback="/employee/landing" />
+          <div className="flex-1">
+            <Outlet />
           </div>
-          <Outlet />
+          <div className="mt-8 text-xs text-slate-500 text-center">
+            © {new Date().getFullYear()} Summit Consulting. All rights reserved.
+          </div>
         </main>
       </div>
     </div>

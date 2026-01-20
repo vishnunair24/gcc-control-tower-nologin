@@ -53,6 +53,17 @@ export default function Header() {
           />
         </div>
 
+        {user && (user.role === "EMPLOYEE" || user.role === "ADMIN") && (
+          <button
+            type="button"
+            onClick={() => navigate("/employee/landing")}
+            title="Customer landing"
+            className="flex items-center justify-center h-8 w-8 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 shadow-sm border border-slate-300 text-sm font-semibold"
+          >
+            ⌂
+          </button>
+        )}
+
         {user && (
           <div className="flex items-center gap-3">
             <div className="flex flex-col text-right text-xs">
@@ -81,9 +92,9 @@ export default function Header() {
                 type="button"
                 onClick={handleLogout}
                 title="Sign out"
-                className="text-gray-500 hover:text-red-600"
+                className="flex items-center justify-center h-8 w-8 rounded-full bg-red-600 text-white hover:bg-red-700 shadow text-sm font-semibold"
               >
-                ⎋
+                ⏻
               </button>
             </div>
           </div>
