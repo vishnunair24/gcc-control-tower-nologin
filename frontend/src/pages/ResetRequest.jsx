@@ -56,7 +56,7 @@ export default function ResetRequest() {
 
   return (
     <AuthLayout
-      title="Reset password"
+      title="Set / reset password"
       subtitle="Enter your registered email to view reset options."
     >
       <form onSubmit={handleSubmit} className="space-y-4">
