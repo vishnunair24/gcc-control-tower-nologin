@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
@@ -43,11 +43,13 @@ export default function ResetChangePassword() {
     }
   };
 
-  // Initial load when component mounts
-  if (questions.length === 0 && emailFromQuery && email === emailFromQuery) {
-    // Fire and forget; React render is sync but this call is async
-    loadQuestions(emailFromQuery);
-  }
+  // Initial load when component mounts or when email param changes
+  useEffect(() => {
+    if (emailFromQuery) {
+      loadQuestions(emailFromQuery);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emailFromQuery]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
