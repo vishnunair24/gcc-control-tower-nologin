@@ -238,6 +238,14 @@ model User {
   resetToken         String?
   resetTokenExpires  DateTime?
 
+  // Security questions for password recovery
+  securityQuestion1    String?
+  securityAnswer1Hash  String?
+  securityQuestion2    String?
+  securityAnswer2Hash  String?
+  securityQuestion3    String?
+  securityAnswer3Hash  String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

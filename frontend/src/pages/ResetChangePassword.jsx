@@ -13,36 +13,41 @@ export default function ResetChangePassword() {
   const emailFromQuery = query.get("email") || "";
 
   const [email, setEmail] = useState(emailFromQuery);
-  const [oldPassword, setOldPassword] = useState("");
+  const [questions, setQuestions] = useState([]);
+  const [answers, setAnswers] = useState([]);
   const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [useToken, setUseToken] = useState(false);
-  const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [generatedToken, setGeneratedToken] = useState("");
   const navigate = useNavigate();
 
-  const handleGenerateToken = async () => {
+  // Load security questions for this email
+  const loadQuestions = async (targetEmail) => {
+    if (!targetEmail) return;
     setError("");
-    setMessage("");
     try {
-      const res = await axios.post(`${API_BASE_URL}/auth/reset/generate-token`, {
-        email,
+      const res = await axios.post(`${API_BASE_URL}/auth/reset/questions`, {
+        email: targetEmail,
       });
-      // Do not expose the token in the UI; just mark that a token exists
-      if (res.data?.resetToken) {
-        setGeneratedToken("generated");
-      }
-      setUseToken(true);
-      setMessage("One-time token generated.");
+      const qs = res.data?.questions || [];
+      setQuestions(qs);
+      setAnswers(qs.map(() => ""));
     } catch (err) {
-      console.error("Generate reset token failed", err);
-      const msg = err?.response?.data?.error || "Failed to generate token";
+      console.error("Load security questions failed", err);
+      const msg = err?.response?.data?.error ||
+        "Unable to load security questions for this user.";
       setError(msg);
+      setQuestions([]);
+      setAnswers([]);
     }
   };
+
+  // Initial load when component mounts
+  if (questions.length === 0 && emailFromQuery && email === emailFromQuery) {
+    // Fire and forget; React render is sync but this call is async
+    loadQuestions(emailFromQuery);
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -58,8 +63,7 @@ export default function ResetChangePassword() {
     try {
       await axios.post(`${API_BASE_URL}/auth/reset/confirm`, {
         email,
-        oldPassword: useToken ? undefined : oldPassword,
-        resetToken: useToken ? token || generatedToken || undefined : undefined,
+        answers,
         newPassword,
       });
       setMessage("Password updated successfully.");
@@ -76,7 +80,7 @@ export default function ResetChangePassword() {
   return (
     <AuthLayout
       title="Reset your password"
-      subtitle="Use your current password or a one-time token to reset."
+      subtitle="Answer your security questions to set a new password."
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
@@ -98,48 +102,37 @@ export default function ResetChangePassword() {
             type="email"
             className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm bg-slate-50"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setQuestions([]);
+              setAnswers([]);
+            }}
             required
           />
         </div>
 
-        {!useToken && (
-          <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Old password
-            </label>
-            <input
-              type="password"
-              className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={oldPassword}
-              onChange={(e) => setOldPassword(e.target.value)}
-              required
-            />
-          </div>
-        )}
-
-        <div className="text-xs text-slate-600 flex items-center justify-between">
-          <span>Or use a one-time token:</span>
-          <button
-            type="button"
-            onClick={handleGenerateToken}
-            className="text-blue-600 hover:text-blue-700 font-medium"
-          >
-            Generate one-time token
-          </button>
-        </div>
-
-        {useToken && (
-          <div>
-            <label className="block text-sm font-medium text-slate-700">
-              One-time token
-            </label>
-            <input
-              className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder="Enter token shared with you"
-            />
+        {questions.length > 0 && (
+          <div className="space-y-3 border border-slate-200 rounded-md p-3 bg-slate-50">
+            <p className="text-xs font-semibold text-slate-800">
+              Answer your security questions
+            </p>
+            {questions.map((q, idx) => (
+              <div key={idx}>
+                <label className="block text-xs font-medium text-slate-700">
+                  {q}
+                </label>
+                <input
+                  className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  value={answers[idx] || ""}
+                  onChange={(e) => {
+                    const next = [...answers];
+                    next[idx] = e.target.value;
+                    setAnswers(next);
+                  }}
+                  required
+                />
+              </div>
+            ))}
           </div>
         )}
 

@@ -1,0 +1,17 @@
+export const SECURITY_QUESTION_BANK = [
+  "What is the name of your first school?",
+  "In which city were you born?",
+  "What is your favourite sport?",
+  "What is your favourite movie?",
+  "What is the name of your childhood best friend?",
+  "What was the make of your first car?",
+  "What is your favourite travel destination?",
+  "What is your favourite cuisine?",
+  "What is the name of your first manager?",
+  "What was your favourite subject in school?",
+  "What is the name of your first pet?",
+  "What is the nickname most people use for you?",
+  "What is your favourite book?",
+  "What is the name of the street you grew up on?",
+  "What is your favourite hobby?",
+];

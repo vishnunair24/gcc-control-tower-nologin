@@ -10,6 +10,7 @@ const {
   setPasswordFirstTime,
   requestResetInfo,
   generateResetToken,
+  getSecurityQuestions,
   resetPassword,
   login,
 } = require("../controllers/authController");
@@ -26,7 +27,9 @@ router.post("/login", login);
 // Password / reset flows
 router.post("/set-password-first", setPasswordFirstTime);
 router.post("/reset/info", requestResetInfo);
+// Token-based reset is deprecated; route kept only to return an error
 router.post("/reset/generate-token", generateResetToken);
+router.post("/reset/questions", getSecurityQuestions);
 router.post("/reset/confirm", resetPassword);
 
 // ==============================

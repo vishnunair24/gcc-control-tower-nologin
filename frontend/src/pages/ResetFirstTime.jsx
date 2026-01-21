@@ -13,7 +13,6 @@ export default function ResetFirstTime() {
   const emailFromQuery = query.get("email") || "";
 
   const [email, setEmail] = useState(emailFromQuery);
-  const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,7 +35,6 @@ export default function ResetFirstTime() {
       await axios.post(`${API_BASE_URL}/auth/set-password-first`, {
         email,
         password,
-        resetToken: token || undefined,
       });
       setMessage("Password set successfully. You can now sign in.");
       setTimeout(() => navigate("/login"), 1200);
@@ -76,18 +74,6 @@ export default function ResetFirstTime() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700">
-            One-time token (if provided)
-          </label>
-          <input
-            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="Enter token shared by admin"
           />
         </div>
 

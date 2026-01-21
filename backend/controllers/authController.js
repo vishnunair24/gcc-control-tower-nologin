@@ -1,5 +1,4 @@
 const bcrypt = require("bcryptjs");
-const crypto = require("crypto");
 const prisma = require("../prisma/client");
 
 const SALT_ROUNDS = 10;
@@ -14,7 +13,7 @@ function normalizeEmail(email) {
 
 exports.signupEmployee = async (req, res) => {
   try {
-    const { name, email, phone, country, place } = req.body;
+    const { name, email, phone, country, place, securityQuestions } = req.body;
 
     if (!name || !email) {
       return res.status(400).json({ error: "Name and email are required" });
@@ -27,6 +26,19 @@ exports.signupEmployee = async (req, res) => {
       return res.status(400).json({ error: "User with this email already exists" });
     }
 
+    if (!Array.isArray(securityQuestions) || securityQuestions.length < 3) {
+      return res.status(400).json({
+        error: "Please select and answer at least 3 security questions",
+      });
+    }
+
+    const [q1, q2, q3] = securityQuestions;
+    const normalizeAnswer = (a) => (a || "").trim().toLowerCase();
+
+    const answer1Hash = await bcrypt.hash(normalizeAnswer(q1?.answer), SALT_ROUNDS);
+    const answer2Hash = await bcrypt.hash(normalizeAnswer(q2?.answer), SALT_ROUNDS);
+    const answer3Hash = await bcrypt.hash(normalizeAnswer(q3?.answer), SALT_ROUNDS);
+
     const user = await prisma.user.create({
       data: {
         name,
@@ -36,6 +48,12 @@ exports.signupEmployee = async (req, res) => {
         country: country || null,
         place: place || null,
         status: "PENDING",
+        securityQuestion1: q1?.question || null,
+        securityAnswer1Hash: answer1Hash,
+        securityQuestion2: q2?.question || null,
+        securityAnswer2Hash: answer2Hash,
+        securityQuestion3: q3?.question || null,
+        securityAnswer3Hash: answer3Hash,
       },
     });
 
@@ -48,7 +66,7 @@ exports.signupEmployee = async (req, res) => {
 
 exports.signupCustomer = async (req, res) => {
   try {
-    const { name, email, phone, country, place, customerName } = req.body;
+    const { name, email, phone, country, place, customerName, securityQuestions } = req.body;
 
     if (!name || !email || !customerName) {
       return res
@@ -63,6 +81,19 @@ exports.signupCustomer = async (req, res) => {
       return res.status(400).json({ error: "User with this email already exists" });
     }
 
+    if (!Array.isArray(securityQuestions) || securityQuestions.length < 3) {
+      return res.status(400).json({
+        error: "Please select and answer at least 3 security questions",
+      });
+    }
+
+    const [q1, q2, q3] = securityQuestions;
+    const normalizeAnswer = (a) => (a || "").trim().toLowerCase();
+
+    const answer1Hash = await bcrypt.hash(normalizeAnswer(q1?.answer), SALT_ROUNDS);
+    const answer2Hash = await bcrypt.hash(normalizeAnswer(q2?.answer), SALT_ROUNDS);
+    const answer3Hash = await bcrypt.hash(normalizeAnswer(q3?.answer), SALT_ROUNDS);
+
     const user = await prisma.user.create({
       data: {
         name,
@@ -73,6 +104,12 @@ exports.signupCustomer = async (req, res) => {
         country: country || null,
         place: place || null,
         status: "PENDING",
+        securityQuestion1: q1?.question || null,
+        securityAnswer1Hash: answer1Hash,
+        securityQuestion2: q2?.question || null,
+        securityAnswer2Hash: answer2Hash,
+        securityQuestion3: q3?.question || null,
+        securityAnswer3Hash: answer3Hash,
       },
     });
 
@@ -110,22 +147,11 @@ exports.approveUser = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    let tokenData = {};
-    if (!existing.passwordHash) {
-      const token = crypto.randomBytes(16).toString("hex");
-      const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-      tokenData = {
-        resetToken: token,
-        resetTokenExpires: expires,
-      };
-    }
-
     const user = await prisma.user.update({
       where: { id },
       data: {
         status: "APPROVED",
         customerName: customerName || undefined,
-        ...tokenData,
       },
     });
 
@@ -158,7 +184,7 @@ exports.rejectUser = async (req, res) => {
 
 exports.setPasswordFirstTime = async (req, res) => {
   try {
-    const { email, password, resetToken } = req.body;
+    const { email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required" });
@@ -179,23 +205,12 @@ exports.setPasswordFirstTime = async (req, res) => {
       return res.status(400).json({ error: "Password already set" });
     }
 
-    if (resetToken) {
-      if (!user.resetToken || user.resetToken !== resetToken) {
-        return res.status(400).json({ error: "Invalid reset token" });
-      }
-      if (user.resetTokenExpires && user.resetTokenExpires < new Date()) {
-        return res.status(400).json({ error: "Reset token has expired" });
-      }
-    }
-
     const hash = await bcrypt.hash(password, SALT_ROUNDS);
 
     const updated = await prisma.user.update({
       where: { email: normalizedEmail },
       data: {
         passwordHash: hash,
-        resetToken: null,
-        resetTokenExpires: null,
       },
     });
 
@@ -233,6 +248,14 @@ exports.requestResetInfo = async (req, res) => {
 };
 
 exports.generateResetToken = async (req, res) => {
+  // Deprecated: one-time token flow removed in favour of security questions
+  return res
+    .status(400)
+    .json({ error: "Reset tokens are no longer supported" });
+};
+
+// Return configured security questions (without answers) for an approved user
+exports.getSecurityQuestions = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
@@ -240,38 +263,35 @@ exports.generateResetToken = async (req, res) => {
     }
 
     const normalizedEmail = normalizeEmail(email);
-
     const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+
+    if (!user || user.status !== "APPROVED") {
+      return res.status(404).json({ error: "Approved user not found" });
     }
 
-    if (user.status !== "APPROVED") {
-      return res.status(400).json({ error: "User is not approved" });
+    const questions = [
+      user.securityQuestion1,
+      user.securityQuestion2,
+      user.securityQuestion3,
+    ].filter(Boolean);
+
+    if (!questions.length) {
+      return res.status(400).json({
+        error:
+          "Security questions are not configured for this user. Please contact the administrator.",
+      });
     }
 
-    const token = crypto.randomBytes(16).toString("hex");
-    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-
-    await prisma.user.update({
-      where: { email: normalizedEmail },
-      data: {
-        resetToken: token,
-        resetTokenExpires: expires,
-      },
-    });
-
-    // In a later phase, this token can be emailed. For now we just return it so admin/UI can show it securely.
-    res.json({ resetToken: token, expiresAt: expires });
+    res.json({ questions });
   } catch (err) {
-    console.error("generateResetToken error", err);
-    res.status(500).json({ error: "Failed to generate reset token" });
+    console.error("getSecurityQuestions error", err);
+    res.status(500).json({ error: "Failed to load security questions" });
   }
 };
 
 exports.resetPassword = async (req, res) => {
   try {
-    const { email, oldPassword, newPassword, resetToken } = req.body;
+    const { email, oldPassword, newPassword, answers } = req.body;
 
     if (!email || !newPassword) {
       return res.status(400).json({ error: "Email and new password are required" });
@@ -297,15 +317,36 @@ exports.resetPassword = async (req, res) => {
       if (!match) {
         return res.status(400).json({ error: "Old password is incorrect" });
       }
-    } else if (resetToken) {
-      if (!user.resetToken || user.resetToken !== resetToken) {
-        return res.status(400).json({ error: "Invalid reset token" });
-      }
-      if (user.resetTokenExpires && user.resetTokenExpires < new Date()) {
-        return res.status(400).json({ error: "Reset token has expired" });
-      }
     } else {
-      return res.status(400).json({ error: "Old password or reset token is required" });
+      // Fallback to security questions when old password is not provided
+      const storedHashes = [
+        user.securityAnswer1Hash,
+        user.securityAnswer2Hash,
+        user.securityAnswer3Hash,
+      ].filter(Boolean);
+
+      if (!Array.isArray(answers) || !answers.length || !storedHashes.length) {
+        return res.status(400).json({
+          error:
+            "Security questions are required to reset your password. Please answer the configured questions.",
+        });
+      }
+
+      const normalizedAnswers = answers.map((a) => (a || "").trim().toLowerCase());
+
+      if (normalizedAnswers.length < storedHashes.length) {
+        return res.status(400).json({
+          error: "Please provide answers for all configured security questions.",
+        });
+      }
+
+      // Compare each configured question's hash with the corresponding answer index
+      for (let i = 0; i < storedHashes.length; i += 1) {
+        const ok = await bcrypt.compare(normalizedAnswers[i], storedHashes[i]);
+        if (!ok) {
+          return res.status(400).json({ error: "Security answers did not match" });
+        }
+      }
     }
 
     const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
@@ -314,8 +355,6 @@ exports.resetPassword = async (req, res) => {
       where: { email: normalizedEmail },
       data: {
         passwordHash: hash,
-        resetToken: null,
-        resetTokenExpires: null,
       },
     });
 
