@@ -179,6 +179,68 @@ exports.rejectUser = async (req, res) => {
 };
 
 // ==============================
+// ADMIN USER MANAGEMENT (LIST & ROLE UPDATES)
+// ==============================
+
+// List all users with basic fields so admin can review roles/access
+exports.listAllUsers = async (_req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      orderBy: { createdAt: "asc" },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        status: true,
+        customerName: true,
+        createdAt: true,
+      },
+    });
+
+    res.json(users);
+  } catch (err) {
+    console.error("listAllUsers error", err);
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+};
+
+// Update a user's role. Front-end will restrict this to admins only.
+exports.updateUserRole = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { role } = req.body;
+
+    const allowedRoles = ["ADMIN", "EMPLOYEE", "CUSTOMER"];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ error: "Invalid role" });
+    }
+
+    const existing = await prisma.user.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const updated = await prisma.user.update({
+      where: { id },
+      data: { role },
+    });
+
+    res.json({
+      id: updated.id,
+      name: updated.name,
+      email: updated.email,
+      role: updated.role,
+      status: updated.status,
+      customerName: updated.customerName,
+    });
+  } catch (err) {
+    console.error("updateUserRole error", err);
+    res.status(500).json({ error: "Failed to update user role" });
+  }
+};
+
+// ==============================
 // PASSWORD SET / RESET
 // ==============================
 

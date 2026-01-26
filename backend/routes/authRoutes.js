@@ -7,6 +7,8 @@ const {
   listPendingUsers,
   approveUser,
   rejectUser,
+  listAllUsers,
+  updateUserRole,
   setPasswordFirstTime,
   requestResetInfo,
   generateResetToken,
@@ -40,5 +42,7 @@ router.post("/reset/confirm", resetPassword);
 router.get("/users/pending", listPendingUsers);
 router.post("/users/:id/approve", approveUser);
 router.post("/users/:id/reject", rejectUser);
+router.get("/users", listAllUsers);
+router.patch("/users/:id/role", updateUserRole);
 
 module.exports = router;

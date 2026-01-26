@@ -16,6 +16,7 @@ import EmployeeLanding from "./pages/EmployeeLanding";
 import ResetFirstTime from "./pages/ResetFirstTime";
 import ResetChangePassword from "./pages/ResetChangePassword";
 import AdminUserApprovals from "./pages/AdminUserApprovals";
+import AdminUsers from "./pages/AdminUsers";
 import { useAuth } from "./authContext";
 import summitLogo from "./assets/summit-logo.png";
 
@@ -94,12 +95,32 @@ function App() {
       <Route path="/reset/first-time" element={<ResetFirstTime />} />
       <Route path="/reset/change" element={<ResetChangePassword />} />
 
-      {/* Standalone landing page (no sidebar/header), but protected */}
+      {/* Standalone landing-style pages (no sidebar/header), but protected */}
       <Route
         path="/employee/landing"
         element={
           <RequireAuth>
             <EmployeeLanding />
+          </RequireAuth>
+        }
+      />
+
+      {/* Admin-only user approvals on a standalone page (not inside main dashboard shell) */}
+      <Route
+        path="/admin/user-approvals"
+        element={
+          <RequireAuth>
+            <AdminUserApprovals />
+          </RequireAuth>
+        }
+      />
+
+      {/* Admin-only user & role management page */}
+      <Route
+        path="/admin/users"
+        element={
+          <RequireAuth>
+            <AdminUsers />
           </RequireAuth>
         }
       />
@@ -114,10 +135,6 @@ function App() {
       >
         <Route path="/" element={<Navigate to="/dashboard" />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route
-          path="/admin/user-approvals"
-          element={<AdminUserApprovals />}
-        />
           <Route
             path="/tracker"
             element={

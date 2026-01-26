@@ -74,13 +74,22 @@ export default function Header() {
                 {user.role}
               </span>
               {user.role === "ADMIN" && (
-                <button
-                  type="button"
-                  onClick={() => navigate("/admin/user-approvals")}
-                  className="text-[11px] text-blue-600 hover:text-blue-700 font-medium mt-0.5"
-                >
-                  User approvals
-                </button>
+                <div className="flex flex-col items-end gap-0.5 mt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/admin/user-approvals")}
+                    className="text-[11px] text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    User approvals
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/admin/users")}
+                    className="text-[11px] text-indigo-600 hover:text-indigo-700 font-medium"
+                  >
+                    Users & roles
+                  </button>
+                </div>
               )}
             </div>
 
