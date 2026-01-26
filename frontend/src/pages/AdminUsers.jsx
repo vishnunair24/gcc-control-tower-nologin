@@ -14,14 +14,14 @@ export default function AdminUsers() {
   const [savingId, setSavingId] = useState(null);
 
   useEffect(() => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
+    // Wait until user is available; outer RequireAuth protects unauthenticated access
+    if (!user) return;
+
     if (user.role !== "ADMIN") {
       navigate("/dashboard");
       return;
     }
+
     loadAllUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);

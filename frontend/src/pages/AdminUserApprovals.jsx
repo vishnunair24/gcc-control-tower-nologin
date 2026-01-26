@@ -13,10 +13,14 @@ export default function AdminUserApprovals() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!user || user.role !== "ADMIN") {
+    // Wait until user is available; RequireAuth already blocks unauthenticated users
+    if (!user) return;
+
+    if (user.role !== "ADMIN") {
       navigate("/dashboard");
       return;
     }
+
     loadPending();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
