@@ -2,8 +2,8 @@ import infiniteLogo from "./assets/customers/Infinite.png";
 import vipLogo from "./assets/customers/VIP.png";
 import routewareLogo from "./assets/customers/Routeware.png";
 import netdocuments from "./assets/customers/netdocuments.png";
-import Acumatica from "./assets/customers/Acumatica.svg";
-import globexLogo from "./assets/customers/globex.svg";
+import Acumatica from "./assets/customers/Acumatica.png";
+import Comply from "./assets/customers/Comply.png";
 import blueSkyLogo from "./assets/customers/bluesky.svg";
 import northStarLogo from "./assets/customers/northstar.svg";
 import vertexLogo from "./assets/customers/vertex.svg";
@@ -17,7 +17,7 @@ export const CUSTOMERS = [
   { key: "Routeware", label: "Routeware", logo: routewareLogo },
   { key: "netdocuments", label: "netdocuments", logo: netdocuments },
   { key: "Acumatica", label: "Acumatica", logo: Acumatica },
-  { key: "Globex", label: "Globex", logo: globexLogo },
+  { key: "Comply", label: "Comply", logo: Comply },
   { key: "BlueSky", label: "BlueSky", logo: blueSkyLogo },
   { key: "NorthStar", label: "NorthStar", logo: northStarLogo },
   { key: "Vertex", label: "Vertex", logo: vertexLogo },
