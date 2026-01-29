@@ -1,0 +1,8 @@
+version: "3.9"
+
+services:
+  # For staging, we mainly want a different frontend port so it can
+  # run alongside production on the same VPS.
+  frontend:
+    ports:
+      - "8081:80"  # host:container -> staging served on http://server:8081
